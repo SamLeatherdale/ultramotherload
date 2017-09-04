@@ -1,0 +1,7 @@
+.ui-state-active:focus {
+  border: 1px solid #003eff;
+  background: #007fff;
+  font-weight: normal;
+  color: #fff; }
+
+/*# sourceMappingURL=overrides.css.map */

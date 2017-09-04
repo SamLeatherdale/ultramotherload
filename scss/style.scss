@@ -1,0 +1,122 @@
+@import "overrides.scss";
+
+.popover {
+    max-width: none;
+}
+.card-header {
+    font-weight: 500;
+}
+
+canvas#map {
+    border: 1px solid #ededed;
+}
+#map_controls {
+    display: inline-block;
+    margin-left: 15px;
+    vertical-align: top;
+
+    > div {
+        display: inline-block;
+        vertical-align: top;
+        height: 100%;
+        position: relative;
+        margin-right: 15px;
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
+#map_scrollcontrols {
+    button {
+        display: block;
+
+        &:nth-of-type(2n + 1) {
+            margin-bottom: 5px;
+        }
+    }
+}
+#map_scrollbar {
+    height: calc(100% - 175px);
+    margin: 20px 0 20px 15px;
+
+    .ui-slider-handle {
+        width: 3em;
+        height: 1.6em;
+        left: -1em;
+        margin-top: -.8em;
+        text-align: center;
+        line-height: 1.6em;
+    }
+}
+#map_editcontrols {
+    width: 200px;
+
+    .controls-section {
+        margin-bottom: 1.5rem;
+    }
+
+    button {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+
+        span {
+            margin-left: 10px;
+        }
+    }
+}
+#cell_infobox {
+
+}
+.cell-info-title {
+    width: 75px;
+    display: inline-block;
+    font-style: italic;
+}
+#map_materials {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+}
+#map_materials_panel {
+    display: none;
+}
+#map_materials_container {
+    width: 390px;
+
+    .material-container {
+        float: left;
+        width: 48%;
+
+        &:nth-child(2n + 1) {
+            margin-right: 3%;
+        }
+    }
+}
+#current_material_container {
+    display: block;
+}
+#current_material_container:focus {
+    outline: none;
+}
+.material-container {
+    width: 100%;
+    padding-left: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 8px;
+}
+.material-icon {
+    float: left;
+    width: 30px;
+    height: 30px;
+    background-size: cover;
+}
+.material-title {
+    float: left;
+    width: calc(100% - 30px);
+    text-align: left;
+    padding-left: 10px;
+    padding-top: 3px;
+}
