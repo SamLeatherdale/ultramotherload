@@ -6,13 +6,18 @@
 .card-header {
     font-weight: 500;
 }
+.input-group-wrap {
+    display: inline-block;
+    vertical-align: bottom;
+}
+
 
 canvas#map {
     border: 1px solid #ededed;
 }
 #map_controls {
     display: inline-block;
-    margin-left: 15px;
+    margin-left: 5px;
     vertical-align: top;
 
     > div {
@@ -39,7 +44,8 @@ canvas#map {
 #map_scrollbar {
     height: calc(100% - 175px);
     margin: 20px 0 20px 15px;
-
+    //background: //Default background
+    
     .ui-slider-handle {
         width: 3em;
         height: 1.6em;
@@ -48,9 +54,13 @@ canvas#map {
         text-align: center;
         line-height: 1.6em;
     }
+    
+    .ui-slider-range-min {
+        background-color: #007fff;
+    }
 }
 #map_editcontrols {
-    width: 200px;
+    width: 235px;
 
     .controls-section {
         margin-bottom: 1.5rem;
@@ -69,15 +79,40 @@ canvas#map {
 #cell_infobox {
 
 }
-.cell-info-title {
-    width: 75px;
+.info-title {
     display: inline-block;
     font-style: italic;
 }
+.input-row {
+   margin-bottom: 4px; 
+}
+.cell-info-title {
+    @extend .info-title;
+    width: 90px;    
+}
+.position-info-title {
+    @extend .info-title;
+    width: 60px;
+    vertical-align: bottom;
+}
+#info_cell_locked {
+    color: #22e24f;
+}
+#info_cell_locked.locked {
+    color: #f24856;
+}
+#position_infobox input {
+    width: 100px;
+    padding: 0.5rem;
+}
+#input_current_row {
+    display: inline-block;
+}
+#input_group_depth {
+    float: left;
+    width: auto;
+}
 #map_materials {
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
 }
 #map_materials_panel {
     display: none;

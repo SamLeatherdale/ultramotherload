@@ -4,4 +4,7 @@
   font-weight: normal;
   color: #fff; }
 
+.controls-section .card-body {
+  padding: 0.8rem 1rem; }
+
 /*# sourceMappingURL=overrides.css.map */
