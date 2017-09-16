@@ -1,8 +1,7 @@
 <?php
 $compile = TRUE;
 $compile_pages = array(
-    "Home" => "index",
-    "About" => "about"
+    "Home" => "index"
 );
 foreach ($compile_pages as $page_name => $filename) {
     ob_start();
