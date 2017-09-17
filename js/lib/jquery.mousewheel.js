@@ -38,7 +38,7 @@
             if ( this.addEventListener ) {
                 for ( var i = toBind.length; i; ) {
                     //Manual edit: Use passive = true
-                    this.addEventListener( toBind[--i], handler, {passive: true});
+                    this.addEventListener( toBind[--i], handler, false);
                 }
             } else {
                 this.onmousewheel = handler;

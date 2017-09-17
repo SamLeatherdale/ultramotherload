@@ -66,7 +66,7 @@ function UpdateCanvasSize() {
 
     canvas.width = newwidth;
     canvas.height = newheight;
-    $("#map_controls").css({height: newheight});
+    $("#map_scrollcontrols").css({height: newheight});
     ctx = canvas.getContext('2d');
     Redraw();
 }

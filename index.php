@@ -151,107 +151,106 @@
         </div>
         <canvas width="1080" height="600" id="map"></canvas>
 
-        <div id="map_controls">
+        <div id="map_scrollcontrols">
+            <button class="ui-button ui-widget ui-corner-all" id="map_upmany">
+                <i class="fa fa-angle-double-up"></i>
+            </button>
+            <button class="ui-button ui-widget ui-corner-all" id="map_upone">
+                <i class="fa fa-angle-up"></i>
+            </button>
+            <div id="map_scrollbar">
+                <div class="ui-slider-handle"></div>
+            </div>
+            <button class="ui-button ui-widget ui-corner-all" id="map_downone">
+                <i class="fa fa-angle-down"></i>
+            </button>
+            <button class="ui-button ui-widget ui-corner-all" id="map_downmany">
+                <i class="fa fa-angle-double-down"></i>
+            </button>
+        </div>
 
-            <div id="map_scrollcontrols">
-                <button class="ui-button ui-widget ui-corner-all" id="map_upmany">
-                    <i class="fa fa-angle-double-up"></i>
-                </button>
-                <button class="ui-button ui-widget ui-corner-all" id="map_upone">
-                    <i class="fa fa-angle-up"></i>
-                </button>
-                <div id="map_scrollbar">
-                    <div class="ui-slider-handle"></div>
+        <div id="map_infoboxes">
+            <div id="cell_infobox" class="controls-section card">
+                <div class="card-header">
+                    <div>Last Selected Tile</div>
                 </div>
-                <button class="ui-button ui-widget ui-corner-all" id="map_downone">
-                    <i class="fa fa-angle-down"></i>
-                </button>
-                <button class="ui-button ui-widget ui-corner-all" id="map_downmany">
-                    <i class="fa fa-angle-double-down"></i>
-                </button>
+                <div class="card-body">
+                <?php
+                    $cell_details = ["Row", "Column", "Hexcode", "Material", "Color", "Locked"];
+                    foreach ($cell_details as $detail_label) {
+                ?>
+                    <div>
+                        <span class="cell-info-title"><?=$detail_label?>: </span><span id="info_cell_<?=strtolower($detail_label)?>"></span>
+                    </div>
+                <?php
+                    } ?>
+                </div>
             </div>
 
-            <div id="map_infoboxes">
-                <div id="cell_infobox" class="controls-section card">
-                    <div class="card-header">
-                        <div>Last Selected Tile</div>
-                    </div>
-                    <div class="card-body">
-                    <?php
-                        $cell_details = ["Row", "Column", "Hexcode", "Material", "Color", "Locked"];
-                        foreach ($cell_details as $detail_label) {
-                    ?>
-                        <div>
-                            <span class="cell-info-title"><?=$detail_label?>: </span><span id="info_cell_<?=strtolower($detail_label)?>"></span>
-                        </div>
-                    <?php
-                        } ?>
-                    </div>
+            <div id="selection_infobox" class="controls-section card">
+                <div class="card-header">
+                    <div>Selection Info</div>
                 </div>
-
-                <div id="selection_infobox" class="controls-section card">
-                    <div class="card-header">
-                        <div>Selection Info</div>
+                <div class="card-body">
+                <?php
+                    $selection_details = [
+                        "Width" => "width",
+                        "Height" => "height",
+                        "Total Cells" => "total"
+                    ];
+                    foreach ($selection_details as $detail_label => $detail_class) {
+                ?>
+                    <div>
+                        <span class="cell-info-title"><?=$detail_label?>: </span><span id="info_selection_<?=$detail_class?>">0</span>
                     </div>
-                    <div class="card-body">
-                    <?php
-                        $selection_details = [
-                            "Width" => "width",
-                            "Height" => "height",
-                            "Total Cells" => "total"
-                        ];
-                        foreach ($selection_details as $detail_label => $detail_class) {
-                    ?>
-                        <div>
-                            <span class="cell-info-title"><?=$detail_label?>: </span><span id="info_selection_<?=$detail_class?>">0</span>
-                        </div>
-                    <?php
-                        } ?>
-                    </div>
+                <?php
+                    } ?>
                 </div>
+            </div>
 
-                <div class="controls-section card" id="position_infobox">
-                    <div class="card-header">
-                        <div>Position</div>
+            <div class="controls-section card" id="position_infobox">
+                <div class="card-header">
+                    <div>Position</div>
+                </div>
+                <div class="card-body">
+                    <div class="input-row">
+                        <label class="position-info-title" for="input_current_row">Row:</label>
+                        <input type="number" class="form-control" name="input_current_row" id="input_current_row">
                     </div>
-                    <div class="card-body">
-                        <div class="input-row">
-                            <label class="position-info-title" for="input_current_row">Row:</label>
-                            <input type="number" class="form-control" name="input_current_row" id="input_current_row">
-                        </div>
-                        <div class="input-row">
-                            <label class="position-info-title">Depth: </label>
-                            <div class="input-group-wrap">
-                                <div class="input-group" id="input_group_depth">
-                                    <input type="number" class="form-control" id="input_current_depth" step="12.5" />
-                                    <span class="input-group-addon" id="basic-addon1">ft</span>
-                                </div>
+                    <div class="input-row">
+                        <label class="position-info-title">Depth: </label>
+                        <div class="input-group-wrap">
+                            <div class="input-group" id="input_group_depth">
+                                <input type="number" class="form-control" id="input_current_depth" step="12.5" />
+                                <span class="input-group-addon" id="basic-addon1">ft</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div id="map_materials" class="controls-section">
-                    <h4>Current Material:</h4>
-                    <a tabindex="10" id="current_material_container" class="inherit-link"></a>
+            <div id="map_materials" class="controls-section">
+                <h4>Current Material:</h4>
+                <a tabindex="10" id="current_material_container" class="inherit-link"></a>
 
-                    <div id="map_materials_panel" class="clearfix">
-                        <div class="card-header">Select a material</div>
-                        <div id="map_materials_container" class="clearfix">
-                            <div class="material-container ui-button clearfix" data-code="">
-                                <div class="material-icon"></div>
-                                <div class="material-title"></div>
-                            </div>
+                <div id="map_materials_panel" class="clearfix input-group">
+                    <div class="card-header">Select a material</div>
+                    <div id="map_materials_container" class="clearfix">
+                        <div class="material-container ui-button clearfix" data-code="">
+                            <div class="material-icon"></div>
+                            <div class="material-title"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="controls-section">
-                    <label for="input_safemode">Safe Mode:</label>
-                    <input type="checkbox" name="input_safemode" id="input_safemode" checked />
 
-                    <i class="fa fa-question-circle" id="help_safemode"></i>
-                </div>
+                <label for="input_safemode">Safe Mode:</label>
+                <input type="checkbox" name="input_safemode" id="input_safemode" checked />
+                <i class="fa fa-question-circle" id="help_safemode"></i>
+            </div>
+
+            <div class="controls-section">
+
             </div>
         </div>
     </main>

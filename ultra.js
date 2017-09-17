@@ -418,7 +418,7 @@ function UpdateCanvasSize() {
 
     canvas.width = newwidth;
     canvas.height = newheight;
-    $("#map_controls").css({height: newheight});
+    $("#map_scrollcontrols").css({height: newheight});
     ctx = canvas.getContext('2d');
     Redraw();
 }
@@ -457,6 +457,7 @@ function CreateScrollbar() {
 }
 
 function ScrollbarOnScroll(event) {
+    event.preventDefault();
     var SCROLL_FACTOR = 5;
     var newvalue = current_row - event.deltaY * SCROLL_FACTOR;
     UpdateCurrentRow(newvalue);

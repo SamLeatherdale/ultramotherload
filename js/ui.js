@@ -20,6 +20,7 @@ function CreateScrollbar() {
 }
 
 function ScrollbarOnScroll(event) {
+    event.preventDefault();
     var SCROLL_FACTOR = 5;
     var newvalue = current_row - event.deltaY * SCROLL_FACTOR;
     UpdateCurrentRow(newvalue);

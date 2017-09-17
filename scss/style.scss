@@ -112,23 +112,11 @@ main {
     display: none;
 
 }
-#map_controls {
+#map_scrollcontrols, #map_infoboxes {
     display: inline-block;
     vertical-align: top;
+    position: relative;
     margin-left: 5px;
-    vertical-align: top;
-
-    > div {
-        display: inline-block;
-        vertical-align: top;
-        height: 100%;
-        position: relative;
-        margin-right: 15px;
-
-        &:last-child {
-            margin-right: 0;
-        }
-    }
 }
 #map_scrollcontrols {
     button {
@@ -265,12 +253,8 @@ label[for='input_safemode'] {
 }
 
 #footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
     padding: 8px 0;
     text-align: center;
-    z-index: 10;
 
     p {
         margin: 8px 0;
@@ -283,5 +267,17 @@ label[for='input_safemode'] {
     }
     .modal-body {
         text-align: left;
+    }
+}
+@media screen and (max-width: 1400px) {
+    #map_infoboxes {
+        width: 100%;
+        margin-top: 15px;
+
+        .controls-section {
+            float: left;
+            margin-right: 2%;
+            height: 100%;
+        }
     }
 }
