@@ -217,3 +217,10 @@ function IconColorChange() {
     current_icon_color = newcolor;
     $("#header_logo").attr(newcolor); //Sets attributes
 }
+
+function ShowLoadWarning(warning) {
+    $("#load_splash_content").addClass("text-danger");
+    $("#load_splash_icon").hide();
+    $("#load_splash_warning").show();
+    $("#load_splash_message").text(warning);
+}

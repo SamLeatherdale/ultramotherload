@@ -140,6 +140,15 @@
     </header>
 
     <main>
+        <div id="load_splash">
+            <div id="load_splash_container">
+                <div id="load_splash_content">
+                    <i id="load_splash_icon" class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
+                    <i id="load_splash_warning" class="fa fa-3x fa-exclamation-triangle"></i>
+                    <h1 id="load_splash_message">Loading assets...</h1>
+                </div>
+            </div>
+        </div>
         <canvas width="1080" height="600" id="map"></canvas>
 
         <div id="map_controls">

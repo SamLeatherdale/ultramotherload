@@ -654,6 +654,13 @@ function IconColorChange() {
     current_icon_color = newcolor;
     $("#header_logo").attr(newcolor); //Sets attributes
 }
+
+function ShowLoadWarning(warning) {
+    $("#load_splash_content").addClass("text-danger");
+    $("#load_splash_icon").hide();
+    $("#load_splash_warning").show();
+    $("#load_splash_message").text(warning);
+}
 //Load & Save functions
 function LoadImages() {
     var image;
@@ -793,6 +800,9 @@ function ParseFile(file) {
 
 
     //Set up event handlers for post-load events
+    $("#load_splash").hide();
+    $("#map").css({display: "inline-block"}); //Show the canvas
+
     $("#map_scrollbar, #map").mousewheel(ScrollbarOnScroll);
     $("#map_scrollcontrols button").click(ScrollButtonOnClick);
     $("#map").click(CanvasClick);
@@ -807,10 +817,8 @@ function ParseFile(file) {
 //Insertion point
 $(function() {
     // Check for the various File API support.
-    if (window.File && window.FileReader) {
-        // Great success! All the File APIs are supported.
-    } else {
-        alert('The File APIs are not fully supported in this browser.');
+    if (!(window.File && window.FileReader)) {
+        ShowLoadWarning("This browser doesn't support the JavaScript File APIs.");
         return;
     }
 
@@ -858,8 +866,6 @@ function Setup() {
     $(".material-container:first-child").click(); //Select first material as default
     //$("#current_material_container").click(OpenMaterialPanel);
 
-
     $(document).on('keyup keydown', KeypressHandler);
-
     LoadDefaultMap();
 }

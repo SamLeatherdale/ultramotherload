@@ -137,6 +137,9 @@ function ParseFile(file) {
 
 
     //Set up event handlers for post-load events
+    $("#load_splash").hide();
+    $("#map").css({display: "inline-block"}); //Show the canvas
+
     $("#map_scrollbar, #map").mousewheel(ScrollbarOnScroll);
     $("#map_scrollcontrols button").click(ScrollButtonOnClick);
     $("#map").click(CanvasClick);

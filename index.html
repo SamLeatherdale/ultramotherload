@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-            <!--Compiled on 17/09/2017 01:38:31PM +02:00 CEST-->
+            <!--Compiled on 17/09/2017 02:02:01PM +02:00 CEST-->
         <title>Ultra Motherload - Super Motherload Map Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
     <link rel="stylesheet" href="css/bootstrap-switch.min.css" />
-    <link rel="stylesheet" href="css/style.css?v=0.78849200 1505648311" />
+    <link rel="stylesheet" href="css/style.css?v=0.88068200 1505649721" />
 
 
 
@@ -29,7 +29,7 @@
 
     <script src="js/lib/jquery.mousewheel.js"></script>
     <script src="js/lib/DataStream.js"></script>
-    <script src="ultra.js?v=0.78850000 1505648311"></script>
+    <script src="ultra.js?v=0.88069100 1505649721"></script>
 </head>
 <body>
 <div id="content_wrap">
@@ -110,6 +110,15 @@
     </header>
 
     <main>
+        <div id="load_splash">
+            <div id="load_splash_container">
+                <div id="load_splash_content">
+                    <i id="load_splash_icon" class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
+                    <i id="load_splash_warning" class="fa fa-3x fa-exclamation-triangle"></i>
+                    <h1 id="load_splash_message">Loading assets...</h1>
+                </div>
+            </div>
+        </div>
         <canvas width="1080" height="600" id="map"></canvas>
 
         <div id="map_controls">
@@ -183,13 +192,13 @@
                     <div class="card-body">
                         <div class="input-row">
                             <label class="position-info-title" for="input_current_row">Row:</label>
-                            <input class="form-control" name="input_current_row" id="input_current_row">
+                            <input type="number" class="form-control" name="input_current_row" id="input_current_row">
                         </div>
                         <div class="input-row">
                             <label class="position-info-title">Depth: </label>
                             <div class="input-group-wrap">
                                 <div class="input-group" id="input_group_depth">
-                                    <input id="input_current_depth" step="12.5" />
+                                    <input type="number" class="form-control" id="input_current_depth" step="12.5" />
                                     <span class="input-group-addon" id="basic-addon1">ft</span>
                                 </div>
                             </div>

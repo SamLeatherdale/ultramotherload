@@ -81,8 +81,30 @@ body {
 main {
   margin: 10px 0; }
 
-canvas#map {
+#map, #load_splash {
   border: 1px solid #989898; }
+
+#load_splash {
+  text-align: center;
+  display: inline-block;
+  width: 1080px;
+  height: 600px; }
+
+#load_splash_container {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  height: 100%; }
+
+#load_splash_content {
+  display: table-cell;
+  vertical-align: middle; }
+
+#load_splash_warning {
+  display: none; }
+
+#map {
+  display: none; }
 
 #map_controls {
   display: inline-block;
@@ -208,7 +230,8 @@ label[for='input_safemode'] {
   bottom: 0;
   width: 100%;
   padding: 8px 0;
-  text-align: center; }
+  text-align: center;
+  z-index: 10; }
   #footer p {
     margin: 8px 0; }
 

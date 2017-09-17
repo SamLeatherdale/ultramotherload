@@ -1,10 +1,8 @@
 //Insertion point
 $(function() {
     // Check for the various File API support.
-    if (window.File && window.FileReader) {
-        // Great success! All the File APIs are supported.
-    } else {
-        alert('The File APIs are not fully supported in this browser.');
+    if (!(window.File && window.FileReader)) {
+        ShowLoadWarning("This browser doesn't support the JavaScript File APIs.");
         return;
     }
 
@@ -52,8 +50,6 @@ function Setup() {
     $(".material-container:first-child").click(); //Select first material as default
     //$("#current_material_container").click(OpenMaterialPanel);
 
-
     $(document).on('keyup keydown', KeypressHandler);
-
     LoadDefaultMap();
 }
