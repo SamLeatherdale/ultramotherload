@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Australia/Sydney');
 $compile = TRUE;
 $compile_pages = [
     "index.php" => "index.html",
