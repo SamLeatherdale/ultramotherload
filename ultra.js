@@ -1,5 +1,3 @@
-/* global FileReader, DataStream */
-
 "use strict";
 //Map file variables
 var datastream;
@@ -29,7 +27,7 @@ var keys = {control: false, shift: false};
 var map = [];
 var ctx;
 var zoom_level = 1;
-var current_row = 0; 
+var current_row = 0;
 var selected_tool;
 var selected_cells = {};
 var paste_cells = {};
@@ -37,12 +35,96 @@ var last_selected = false;
 var overwrite_code;
 var current_action = false;
 var draw_allowed = false;
+var safe_mode = true;
 
 //Draw colours
 var selected_color = "#00fffa";
 var last_selected_color = "#0072ff";
 var paste_color = "#9800ff";
 
+
+
+
+function Point(row, col) {
+    //A simple interface for a point
+    this.row = row;
+    this.col = col;
+}
+
+function Rectangle(startpoint, endpoint) {
+    this.start = startpoint;
+    this.end = endpoint;
+}
+Rectangle.prototype.contains = function(point) {
+    return (point.row >= this.start.row && point.row <= this.end.row
+        && point.col >= this.start.col && point.col <= this.end.col);
+};
+
+function Outpost(name, areas, edge_below) {
+    this.name = name;
+
+    var points = [];
+    $.each(areas, function(i, area) {
+        points.push(area.start);
+        points.push(area.end);
+    });
+    var corners = findCorners(points);
+
+    this.start_row = corners.startRow;
+    this.end_row = corners.endRow;
+    this.height = this.end_row - this.start_row + 1;
+
+    this.start_col = corners.startCol;
+    this.end_col = corners.endCol;
+    this.width = this.end_col - this.start_col + 1;
+
+    this.areas = areas;
+    this.edge_below = edge_below;
+}
+
+var outposts = [
+    new Outpost("Alpha", [
+        new Rectangle(new Point(444, 12), new Point(444, 25)),
+        new Rectangle(new Point(445, 1), new Point(447, 36))
+    ], true),
+    new Outpost("Beta", [
+        new Rectangle(new Point(644, 12), new Point(645, 25)),
+        new Rectangle(new Point(646, 1), new Point(647, 36))
+    ], true),
+    new Outpost("Gamma", [
+        new Rectangle(new Point(762, 25), new Point(766, 32))
+    ], false),
+    new Outpost("Delta", [
+        new Rectangle(new Point(894, 12), new Point(895, 25)),
+        new Rectangle(new Point(896, 1), new Point(897, 36))
+    ], true),
+    new Outpost("BossRoom", [
+        new Rectangle(new Point(1492, 4), new Point(1497, 33))
+    ], false),
+    new Outpost("", [ //This is the entire boss room, including the barriers, for safety
+        new Rectangle(new Point(1490, 1), new Point(1500, 36))
+    ], false),
+    new Outpost("Marker", [
+        new Rectangle(new Point(1501, 1), new Point(1501, 36))
+    ], false),
+    new Outpost("Surface", [
+        new Rectangle(new Point(294, 1), new Point(300, 36))
+    ], true)
+];
+
+function IconColor(fill, stroke) {
+    this.fill = fill;
+    this.stroke = stroke;
+}
+var icon_colors = [
+    new IconColor('#3fffad', '#00c984'), //Green
+    new IconColor('#ff6a7b', '#c92800'), //Red
+    new IconColor('#2a9dff', '#1f5fff'), //Blue
+    new IconColor('#e154ff', '#9300bf'), //Purple
+    new IconColor('#ffb90a', '#f4a700') //Orange
+]
+var current_icon_color = icon_colors[0];
+var ICON_COLOR_DELAY = 5000;
 function Cell(code, color, row, col) {
     this.row = row;
     this.col = col;
@@ -52,14 +134,24 @@ function Cell(code, color, row, col) {
     this.code = this.decode(code);
     this.color = this.decode(color);
     this.hexcode = this.code + this.color;
-    
-    this.isOutpost = false;
+    this.modified = false;
+
+    this.draw = true;
+    this.is_outpost = false;
+    this.is_edge = false;
     checkOutpost: { //Loop label
         for (var o = 0; o < outposts.length; o++) {
             var outpost = outposts[o];
+            if (outpost.edge_below && this.row == outpost.end_row + 1) {
+                this.is_edge = true;
+                break checkOutpost;
+            }
             for (var r = 0; r < outpost.areas.length; r++) {
                 if (outpost.areas[r].contains(this)) {
-                    this.isOutpost = true;
+                    this.is_outpost = true;
+                    if (outpost.name != "") {
+                        this.draw = false;
+                    }
                     break checkOutpost;
                 }
             }
@@ -80,28 +172,33 @@ Cell.prototype.updateCode = function(code) {
     if (this.isLocked()) {
         return;
     }
+    this.modified = true;
     this.code = code;
     this.hexcode = this.code + this.color;
+    if (!!last_selected && this.id == last_selected.id) {
+        this.displayInfo();
+    }
 };
 Cell.prototype.isLocked = function() {
-    return (this.code == "FE" || this.code == "FD" || this.isOutpost);
+    return (this.code == "FD" || (safe_mode && (this.code == "FE" || this.is_outpost)));
+    //FD is marker, never allow overwrite, FE is Invisible Barrier, allow overwrite when unlocked
 };
 Cell.prototype.click = function() {
     if (current_action == "action_copy") {
         paste_cells = {};
-        
+
         //Find starting row and column
         var corners = findCorners(selected_cells);
         var transformRow = this.row - corners.startRow;
         var transformCol = this.col - corners.startCol;
         var pcell;
         $.each(selected_cells, function(id, cell) {
-            pcell = map[cell.row + transformRow][cell.col + transformCol];
-            pcell.paste_code = cell.code;
-            paste_cells[pcell.id] = pcell;
+            pcell = getCell(cell.row + transformRow, cell.col + transformCol, false);
+            if (!!pcell) {
+                pcell.paste_code = cell.code;
+                paste_cells[pcell.id] = pcell;
+            }
         });
-    } else if (selected_tool == "tool_overwrite") {
-        this.updateCode(overwrite_code);
     } else {
         if (keys.shift && !!last_selected) {
             var cellA = this;
@@ -123,8 +220,11 @@ Cell.prototype.click = function() {
             selected_cells = {};
             this.select();
         }
+        if (selected_tool == "tool_overwrite") {
+            replaceSelectedCells();
+        }
     }
-    
+
     //Update cell counts
     var selection_count = Object.keys(selected_cells).length;
     if (selection_count > 0) {
@@ -133,7 +233,7 @@ Cell.prototype.click = function() {
         $("#info_selection_height").text(corners.endRow - corners.startRow + 1);
     }
     $("#info_selection_total").text(selection_count);
-    
+
     CheckActionState();
     Redraw();
 };
@@ -147,17 +247,30 @@ Cell.prototype.select = function(lastSelected, force) {
     }
     if (lastSelected) {
         last_selected = this;
-        $("#info_cell_row").text(this.row);
-        $("#info_cell_column").text(this.col);
-        $("#info_cell_hexcode").text(this.hexcode);
-        $("#info_cell_material").text(materials[this.code.toString()]);
-        $("#info_cell_color").text(backgrounds[this.color.toString()]);
-        $("#info_cell_locked").text(this.isLocked() ? "Yes" : "No");
-        if (this.isLocked()) {
-            $("#info_cell_locked").addClass("locked");
-        } else {
-            $("#info_cell_locked").removeClass("locked");
-        }
+        this.displayInfo();
+    }
+};
+Cell.prototype.displayInfo = function() {
+    $("#info_cell_row").text(this.row);
+    $("#info_cell_column").text(this.col);
+    $("#info_cell_hexcode").text(this.hexcode);
+    $("#info_cell_material").text(materials[this.code.toString()]);
+    $("#info_cell_color").text(backgrounds[this.color.toString()]);
+    $("#info_cell_locked").text(this.isLocked() ? "Yes" : "No");
+    if (this.isLocked()) {
+        $("#info_cell_locked").addClass("locked");
+    } else {
+        $("#info_cell_locked").removeClass("locked");
+    }
+}
+Cell.prototype.clear = function() {
+    //Replace cell contents with default material for this position
+    if (this.row < ROWS_ABOVE_SURFACE) {
+        this.updateCode("FF"); //Sky
+    } else if (this.is_edge) {
+        this.updateCode("02"); //Empty (edge)
+    } else {
+        this.updateCode("01"); //Empty
     }
 };
 Cell.prototype.isSelected = function() {
@@ -166,70 +279,6 @@ Cell.prototype.isSelected = function() {
 Cell.prototype.isPasting = function() {
     return (typeof paste_cells[this.id] != "undefined");
 };
-
-function Point(row, col) {
-    //A simple interface for a point
-    this.row = row;
-    this.col = col;
-}
-
-function Rectangle(startpoint, endpoint) {
-    this.start = startpoint;
-    this.end = endpoint;
-}
-Rectangle.prototype.contains = function(point) {
-    return (point.row >= this.start.row && point.row <= this.end.row
-        && point.col >= this.start.col && point.col <= this.end.col);
-};
-
-function Outpost(name, areas) {
-    this.name = name;
-    
-    var points = [];
-    $.each(areas, function(i, area) {
-        points.push(area.start);
-        points.push(area.end);
-    });
-    var corners = findCorners(points);
-    
-    this.start_row = corners.startRow;
-    this.end_row = corners.endRow;
-    this.height = this.end_row - this.start_row + 1;
-    
-    this.start_col = corners.startCol;
-    this.end_col = corners.endCol;
-    this.width = this.end_col - this.start_col + 1;
-    
-    this.areas = areas;
-}
-
-var outposts = [
-    new Outpost("Alpha", [
-        new Rectangle(new Point(444, 12), new Point(444, 25)),
-        new Rectangle(new Point(445, 1), new Point(447, 36))
-    ]),
-    new Outpost("Beta", [
-        new Rectangle(new Point(644, 12), new Point(645, 25)),
-        new Rectangle(new Point(646, 1), new Point(647, 36))
-    ]),
-    new Outpost("Gamma", [
-        new Rectangle(new Point(762, 25), new Point(766, 32))
-    ]),
-    new Outpost("Delta", [
-        new Rectangle(new Point(894, 12), new Point(895, 25)),
-        new Rectangle(new Point(896, 1), new Point(897, 36))
-    ]),
-    new Outpost("BossRoom", [
-        new Rectangle(new Point(1492, 4), new Point(1497, 33))
-    ]),
-    new Outpost("Marker", [
-        new Rectangle(new Point(1501, 1), new Point(1501, 36))
-    ]),
-    new Outpost("Surface", [
-        new Rectangle(new Point(294, 1), new Point(300, 36))
-    ])
-];
-
 //Helper functions
 function mapLoaded() {
     return (map.length > 0);
@@ -249,7 +298,13 @@ function getImage(code, hexcode) {
     }
 }
 
-function getCell(row, col) {
+function getCell(row, col, getNearest) {
+    if (!getNearest) {
+        if (row < 0 || row >= TOTAL_ROWS || col < 1 || col > VIEW_COLS_PER_ROW) {
+            return false;
+        }
+        return map[row][col];
+    }
     if (row < 0) {
         row = 0;
     } else if (row >= TOTAL_ROWS) {
@@ -261,6 +316,7 @@ function getCell(row, col) {
         col = VIEW_COLS_PER_ROW;
     }
     return map[row][col];
+
 }
 
 function findCorners(selection) {
@@ -273,11 +329,11 @@ function findCorners(selection) {
     $.each(selection, function(id, cell) {
         if (cell.row < r.startRow) {
             r.startRow = cell.row;
-        } 
+        }
         if (cell.row > r.endRow) {
             r.endRow = cell.row;
         }
-        
+
         if (cell.col < r.startCol) {
             r.startCol = cell.col;
         }
@@ -288,6 +344,12 @@ function findCorners(selection) {
     return r;
 }
 
+function getRandomInt(min, max) {
+    //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
 //Canvas functions
 function Redraw() {
     if (!draw_allowed) {
@@ -296,17 +358,20 @@ function Redraw() {
     var zoom_img_size = IMG_SIZE * zoom_level;
     var viewable_selected_cells = [];
     ctx.clearRect(0, 0, $("#map").width, $("#map").height);
-    
+
     //Draw special features (if applicable)
     $.each(outposts, function(i, outpost) {
+        if (outpost.name == "") {
+            return true; //Continue loop
+        }
         if (current_row > outpost.start_row - ROWS_PER_VIEW && current_row <= outpost.end_row) {
             //Draw outpost
             var x = (outpost.start_col - 1) * zoom_img_size; //-1 to account for marker columns
-            var y = (outpost.start_row - current_row) * zoom_img_size; 
+            var y = (outpost.start_row - current_row) * zoom_img_size;
             ctx.drawImage(images[outpost.name], x, y, outpost.width * zoom_img_size, outpost.height * zoom_img_size);
         }
     });
-    
+
     //Draw cells
     var cell;
     for (var row = 0; row < ROWS_PER_VIEW; row++) {
@@ -314,7 +379,7 @@ function Redraw() {
             cell = map[row + current_row][col + 1]; //Exclude marker columns
             var x = col * zoom_img_size;
             var y = row * zoom_img_size;
-            if (!cell.isOutpost) {
+            if (cell.draw || cell.modified) { //Always draw overwritten cells
                 try {
                     ctx.drawImage(images[getImage(cell.code, cell.hexcode)], x, y, zoom_img_size, zoom_img_size);
                 } catch (err) {
@@ -330,7 +395,7 @@ function Redraw() {
             }
         }
     }
-    
+
     //Draw cell outlines last
     $.each(viewable_selected_cells, function(i, outline) {
         ctx.strokeStyle = selected_color;
@@ -346,12 +411,16 @@ function Redraw() {
 
 function UpdateCanvasSize() {
     var canvas = $("#map")[0];
+    var max_height = $(window).height() - $("#header").outerHeight(true) - $("#footer").outerHeight(true) - 20;
+    ROWS_PER_VIEW = Math.floor(max_height / (IMG_SIZE * zoom_level));
     var newwidth = VIEW_COLS_PER_ROW * IMG_SIZE * zoom_level;
     var newheight = ROWS_PER_VIEW * IMG_SIZE * zoom_level;
+
     canvas.width = newwidth;
     canvas.height = newheight;
     $("#map_controls").css({height: newheight});
     ctx = canvas.getContext('2d');
+    Redraw();
 }
 
 function CanvasClick(e) {
@@ -361,7 +430,11 @@ function CanvasClick(e) {
     target.click();
 }
 
-
+function ZoomUpdate() {
+    zoom_level = parseFloat($("#map_zoom").val());
+    UpdateCanvasSize();
+    Redraw();
+}
 //UI functions
 function CreateScrollbar() {
     var handle = $("#map_scrollbar .ui-slider-handle");
@@ -403,12 +476,6 @@ function ScrollButtonOnClick(event) {
     }
 }
 
-function ZoomUpdate() {
-    zoom_level = parseFloat($("#map_zoom").val());
-    UpdateCanvasSize();
-    Redraw();
-}
-
 function UpdateCurrentRow(newvalue) {
     //console.log("Current row: " + newvalue);
     if (newvalue < 0) {
@@ -445,13 +512,21 @@ function SelectMaterial() {
 }
 
 function SelectTool() {
-    //Reset selection
-    selected_cells = {};
-    last_selected = false;
-
     selected_tool = $(this).attr('id');
     $(".button-tool").removeClass("ui-state-active");
     $(this).addClass("ui-state-active");
+    if (selected_tool == "tool_overwrite") {
+        $("#map").addClass("cursor-pointer");
+    } else {
+        $("#map").removeClass("cursor-pointer");
+    }
+}
+
+function replaceSelectedCells() {
+    $.each(selected_cells, function(id, cell) {
+        cell.updateCode(overwrite_code);
+    });
+    Redraw();
 }
 
 function SelectAction() {
@@ -460,10 +535,7 @@ function SelectAction() {
     }
     var action = $(this).attr("id");
     if (action == "action_replace") {
-        $.each(selected_cells, function(id, cell) {
-            cell.updateCode(overwrite_code);
-        });
-        Redraw();
+        replaceSelectedCells();
     } else if (action == "action_copy") {
         if (current_action == "action_copy") {
             //We are cancelling copy
@@ -480,9 +552,15 @@ function SelectAction() {
             cell.updateCode(cell.paste_code);
             cell.paste_code = 0;
         });
+        selected_cells = paste_cells;
         paste_cells = {};
         Redraw();
         current_action = false;
+    } else if (action == "action_clear") {
+        $.each(selected_cells, function(id, cell) {
+            cell.clear();
+        });
+        Redraw();
     }
     CheckActionState();
 }
@@ -495,34 +573,46 @@ function CheckActionState() {
         $(".button-action:not(#action_paste)").removeClass("ui-state-disabled");
     }
     if (current_action == "action_copy") {
-        $("#action_copy span").text("Cancel Copy");
+        $("#action_copy span").text("Cancel");
         $("#action_replace").addClass("ui-state-disabled");
         $(".button-action:not(#action_replace)").removeClass("ui-state-disabled");
     } else {
-        $("#action_copy span").text("Copy Selected");
+        $("#action_copy span").text("Copy");
     }
 }
 
 function KeypressHandler(e) {
     var pressed = (e.type == "keydown");
     var key = e.which;
-    
+
     //Save current state for other functions
     if (key == 16) { //Shift
         keys.shift = pressed;
+        return;
     } else if (key == 17) { //Ctrl
         keys.control = pressed;
-    }    
-    
+        return;
+    }
+
     //Otherwise, handle immediately
     if (!pressed) {
         return;
     }
-    
+
+    if (keys.control == true) {
+        if (key == 67) { //C
+            $("#action_copy").click();
+            return;
+        } else if (key == 86) { //V
+            $("#action_paste").click();
+            return;
+        }
+    }
+
     if ((key == 33 || key == 34 || key >= 37 && key <= 40) && !!last_selected) { //Arrow keys
         var move_row = 0;
         var move_col = 0;
-        
+
         if (key == 37) { //Left
             move_col = -1;
         } else if (key == 38) { //Up
@@ -536,15 +626,33 @@ function KeypressHandler(e) {
         } else if (key == 34) { //Page Down
             move_row = 10;
         }
-        var target = getCell(last_selected.row + move_row, last_selected.col + move_col);
+        var target = getCell(last_selected.row + move_row, last_selected.col + move_col, true);
         //Check if we've gone off the viewport
         if (target.row < current_row || target.row >= current_row + ROWS_PER_VIEW) {
             UpdateCurrentRow(current_row + move_row);
         }
-        target.click();        
-    }   
-    
-    //console.log(key);
+        target.click();
+        return;
+    }
+
+    if (key == 45) { //Insert
+        replaceSelectedCells();
+        return;
+    } else if (key == 46) { //Delete
+        $("#action_clear").click();
+        return;
+    }
+
+    console.log(key);
+}
+
+function IconColorChange() {
+    var newcolor = 0;
+    while (newcolor == 0 || newcolor.fill == current_icon_color.fill) {
+         newcolor = icon_colors[getRandomInt(0, icon_colors.length)];
+    }
+    current_icon_color = newcolor;
+    $("#header_logo").attr(newcolor); //Sets attributes
 }
 //Load & Save functions
 function LoadImages() {
@@ -582,69 +690,8 @@ function LoadFile() {
     };
 
     var file = this.files[0];
+    $("#map_filename").text(file.name);
     reader.readAsArrayBuffer(file);
-}
-
-function ParseFile(file) {
-    console.log(typeof file);
-    datastream = new DataStream(file, 0);
-    file_header = datastream.mapUint8Array(48); //First 48 bytes are the header
-    var rawmap = datastream.mapUint8Array(); //Now read the rest of the file
-    
-    //Check this is a valid file
-    var verification = "";
-    for (var i = 1; i < 6; i++) {
-        verification += String.fromCharCode(file_header[i]);
-    }
-    if (verification != "XGSML") {
-        console.error("This is not a valid Super Motherload Map file");
-        return;
-    }
-    
-    //Create the map
-    map = [];
-    var cells = [];
-    var row = 0;
-    var col = 0;
-    var val;
-    for (var i = 0; i <= rawmap.length - 2; i += 2) { //Go in blocks of two 8 bit numbers
-        cells.push(new Cell(rawmap[i], rawmap[i + 1], row, col));
-        col++;
-        if (col == COLS_PER_ROW) {
-            col = 0;
-            row++;
-            map.push(cells);
-            cells = [];
-        }
-    }
-    
-    //Initialize some stuff
-    TOTAL_ROWS = map.length;
-    MAX_VIEW_ROWS = TOTAL_ROWS - ROWS_PER_VIEW;
-    current_row = INITIAL_ROW;
-    $("#input_current_row").attr("max", MAX_VIEW_ROWS).val(INITIAL_ROW);
-    $("#input_current_depth").attr({min: -(MAX_VIEW_ROWS - ROWS_ABOVE_SURFACE) * INGAME_DEPTH_RATIO,
-        max: ROWS_ABOVE_SURFACE * INGAME_DEPTH_RATIO
-    });
-    CreateScrollbar();
-    UpdateCurrentRow(INITIAL_ROW);
-    
-    draw_allowed = true;
-    ZoomUpdate();
-    map[ROWS_ABOVE_SURFACE][1].click(); //Click the first ground cell, so we can start keyboard navigation
-    
-
-    //Set up event handlers for post-load events
-    $("#map_scrollbar, #map").mousewheel(ScrollbarOnScroll);
-    $("#map_scrollcontrols button").click(ScrollButtonOnClick);
-    $("#map").click(CanvasClick);
-    $("#input_current_row").change(function() {
-        UpdateCurrentRow(parseInt($(this).val()));
-    });
-    $("#input_current_depth").change(function() {
-        var row = -(Math.round(parseFloat($(this).val()) / INGAME_DEPTH_RATIO)) + ROWS_ABOVE_SURFACE;
-        UpdateCurrentRow(row);
-    });
 }
 
 function SaveFile() {
@@ -662,7 +709,19 @@ function SaveFile() {
     var datastream = new DataStream();
     datastream.writeUint8Array(file_header); //Reattach the header
     datastream.writeUint8Array(data); //And add the body
-    datastream.save("map"); //Then save with filename map
+
+    //Save the file
+    if (URL && URL.createObjectURL) {
+        if ($("#output_map").attr('href') != "") {
+            URL.revokeObjectURL($("#output_map").attr('href'));
+        }
+        var blob = new Blob([datastream.buffer]);
+        var url = URL.createObjectURL(blob);
+        $("#output_map").attr('href', url);
+        $("#output_map")[0].click(); //Trigger underlying
+    } else {
+        alert("Can't create object URL.");
+    }
 }
 
 function LoadDefaultMap() {
@@ -683,9 +742,68 @@ function LoadDefaultMap() {
     };
 
     oReq.send();
-
 }
 
+function ParseFile(file) {
+    datastream = new DataStream(file, 0);
+    file_header = datastream.mapUint8Array(48); //First 48 bytes are the header
+    var rawmap = datastream.mapUint8Array(file.byteLength - 48); //Now read the rest of the file
+
+    //Check this is a valid file
+    var verification = "";
+    for (var i = 1; i < 6; i++) {
+        verification += String.fromCharCode(file_header[i]);
+    }
+    if (verification != "XGSML") {
+        console.error("This is not a valid Super Motherload Map file");
+        return;
+    }
+
+    //Create the map
+    map = [];
+    var cells = [];
+    var row = 0;
+    var col = 0;
+    var val;
+    for (var i = 0; i <= rawmap.length - 2; i += 2) { //Go in blocks of two 8 bit numbers
+        cells.push(new Cell(rawmap[i], rawmap[i + 1], row, col));
+        col++;
+        if (col == COLS_PER_ROW) {
+            col = 0;
+            row++;
+            map.push(cells);
+            cells = [];
+        }
+    }
+
+    //Initialize some stuff
+    TOTAL_ROWS = map.length;
+    MAX_VIEW_ROWS = TOTAL_ROWS - ROWS_PER_VIEW;
+    current_row = INITIAL_ROW;
+    $("#input_current_row").attr("max", MAX_VIEW_ROWS).val(INITIAL_ROW);
+    $("#input_current_depth").attr({min: -(MAX_VIEW_ROWS - ROWS_ABOVE_SURFACE) * INGAME_DEPTH_RATIO,
+        max: ROWS_ABOVE_SURFACE * INGAME_DEPTH_RATIO
+    });
+    CreateScrollbar();
+    UpdateCurrentRow(INITIAL_ROW);
+
+    draw_allowed = true;
+    ZoomUpdate();
+    map[ROWS_ABOVE_SURFACE][1].click(); //Click the first ground cell, so we can start keyboard navigation
+
+
+    //Set up event handlers for post-load events
+    $("#map_scrollbar, #map").mousewheel(ScrollbarOnScroll);
+    $("#map_scrollcontrols button").click(ScrollButtonOnClick);
+    $("#map").click(CanvasClick);
+    $("#input_current_row").change(function() {
+        UpdateCurrentRow(parseInt($(this).val()));
+    });
+    $("#input_current_depth").change(function() {
+        var row = -(Math.round(parseFloat($(this).val()) / INGAME_DEPTH_RATIO)) + ROWS_ABOVE_SURFACE;
+        UpdateCurrentRow(row);
+    });
+}
 //Insertion point
 $(function() {
     // Check for the various File API support.
@@ -696,7 +814,8 @@ $(function() {
         return;
     }
 
-    LoadImages();    
+    setInterval(IconColorChange, ICON_COLOR_DELAY);
+    LoadImages();
 });
 
 function Setup() {
@@ -706,6 +825,7 @@ function Setup() {
 
     $("#map_file").change(LoadFile);
     $("#map_zoom").change(ZoomUpdate);
+    $(window).resize(UpdateCanvasSize);
 
     $(".button-tool").click(SelectTool);
     $("#tool_select").click();
@@ -720,6 +840,21 @@ function Setup() {
         title: "Select a material",
         trigger: "focus"
     });
+    $("#help_safemode").tooltip({
+        title: "Safe mode prevents certain important tiles being edited. See help for more info."
+    });
+    $("#input_safemode").bootstrapSwitch({
+        onColor: "success",
+        offColor: "danger",
+        onText: "On",
+        offText: "Off",
+        onSwitchChange: function(event, state) {
+            safe_mode = state;
+            if (!!last_selected) {
+                last_selected.displayInfo();
+            }
+        }
+    })
     $(".material-container:first-child").click(); //Select first material as default
     //$("#current_material_container").click(OpenMaterialPanel);
 

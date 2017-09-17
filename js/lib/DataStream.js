@@ -44,7 +44,7 @@ if (Uint8Array.prototype.BYTES_PER_ELEMENT === undefined) {
   */
 DataStream.prototype.save = function(filename) {
   var blob = new Blob([this.buffer]);
-  var URL = (window.webkitURL || window.URL);
+  var URL = (window.URL || window.webkitURL);
   if (URL && URL.createObjectURL) {
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');

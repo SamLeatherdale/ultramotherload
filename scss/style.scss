@@ -1,5 +1,24 @@
-@import "overrides.scss";
+@import "_overrides.scss";
 
+//SCSS Variables
+$border_color: #989898;
+@mixin clearfix {
+    &:after {
+        display: table;
+        content: "";
+        clear: both;
+    }
+}
+
+//General styles
+body {
+    text-align: center;
+}
+
+#content_wrap {
+    display: inline-block;
+    text-align: left;
+}
 .popover {
     max-width: none;
 }
@@ -10,13 +29,69 @@
     display: inline-block;
     vertical-align: bottom;
 }
+.cursor-pointer {
+    cursor: pointer;
+}
 
+//Specific styles
+#title_row {
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 10px;
+}
+#header_logo {
+    width: 100px;
+    height: 72px;
+    transition: 1s;
+}
+#title {
+    display: inline-block;
+    vertical-align: top;
+    padding-top: 15px;
+}
+#input_file_row {
+    .form-group > * {
+        vertical-align: top;
+    }
+}
+#map_filename {
+    width: 140px;
+}
+#save_map {
+    margin-left: 30px;
+}
+#output_map {
+    display: none;
+}
+#map_editcontrols {
+    @include clearfix;
+    .controls-section {
+        float: left;
+        padding: 0 15px;
+        border-right: 1px solid $border_color;
 
+        &:first-child {
+            padding-left: 0;
+        }
+    }
+    .ui-button {
+        width: 120px;
+        padding: .4rem .5rem;
+
+        i {
+            margin-right: 8px;
+        }
+    }
+}
+main {
+    margin: 10px 0;
+}
 canvas#map {
-    border: 1px solid #ededed;
+    border: 1px solid $border_color;
 }
 #map_controls {
     display: inline-block;
+    vertical-align: top;
     margin-left: 5px;
     vertical-align: top;
 
@@ -45,7 +120,7 @@ canvas#map {
     height: calc(100% - 175px);
     margin: 20px 0 20px 15px;
     //background: //Default background
-    
+
     .ui-slider-handle {
         width: 3em;
         height: 1.6em;
@@ -54,12 +129,12 @@ canvas#map {
         text-align: center;
         line-height: 1.6em;
     }
-    
+
     .ui-slider-range-min {
         background-color: #007fff;
     }
 }
-#map_editcontrols {
+#map_infoboxes {
     width: 235px;
 
     .controls-section {
@@ -84,11 +159,11 @@ canvas#map {
     font-style: italic;
 }
 .input-row {
-   margin-bottom: 4px; 
+   margin-bottom: 4px;
 }
 .cell-info-title {
     @extend .info-title;
-    width: 90px;    
+    width: 90px;
 }
 .position-info-title {
     @extend .info-title;
@@ -154,4 +229,35 @@ canvas#map {
     text-align: left;
     padding-left: 10px;
     padding-top: 3px;
+}
+
+label[for='input_safemode'] {
+    margin-right: 10px;
+}
+
+#help_safemode {
+    color: #999999;
+    margin-left: 15px;
+    font-size: 20px;
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 8px 0;
+    text-align: center;
+
+    p {
+        margin: 8px 0;
+    }
+}
+
+#help_modal {
+    .modal-dialog {
+        max-width: 700px;
+    }
+    .modal-body {
+        text-align: left;
+    }
 }

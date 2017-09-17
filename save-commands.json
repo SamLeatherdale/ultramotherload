@@ -1,0 +1,6 @@
+{
+    "commands": [
+        "js/*.js : D:\\xampp\\htdocs\\ultramotherload\\compile_php.bat",
+        "scss/*.scss : sass {relPath}style.scss css{sep}style.css"
+    ]
+}

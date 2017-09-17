@@ -7,3 +7,13 @@
 .controls-section .card-body {
     padding: 0.8rem 1rem;
 }
+.toggle.btn.ios {
+    border-radius: 20px;
+
+    .toggle-handle {
+        background-color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+    }
+}
