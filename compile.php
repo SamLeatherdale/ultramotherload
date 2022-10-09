@@ -2,8 +2,7 @@
 date_default_timezone_set('Australia/Sydney');
 $compile = TRUE;
 $compile_pages = [
-    "index.php" => "index.html",
-    "js/_loader.php" => "ultra.js" 
+    "index.php" => "index.html"
 ];
 foreach ($compile_pages as $source => $destination) {
     ob_start();

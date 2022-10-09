@@ -6,7 +6,7 @@
   @param {?Number} byteOffset Offset from arrayBuffer beginning for the DataStream.
   @param {?Boolean} endianness DataStream.BIG_ENDIAN or DataStream.LITTLE_ENDIAN (the default).
   */
-DataStream = function(arrayBuffer, byteOffset, endianness) {
+export function DataStream(arrayBuffer, byteOffset, endianness) {
   this._byteOffset = byteOffset || 0;
   if (arrayBuffer instanceof ArrayBuffer) {
     this.buffer = arrayBuffer;
@@ -1519,15 +1519,3 @@ DataStream.prototype.writeType = function(t, v, struct) {
     this.position = pos + lengthOverride;
   }
 };
-
-// Export DataStream for amd environments
-if (typeof define === 'function' && define.amd) {
-    define('DataStream', [], function() {
-      return DataStream;
-    });
-  }
-
-// Export DataStream for CommonJS
-if (typeof module === 'object' && module && module.exports) {
-  module.exports = DataStream;
-}

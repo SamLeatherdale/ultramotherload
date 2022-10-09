@@ -33,7 +33,7 @@
 
     <script src="js/lib/jquery.mousewheel.js"></script>
     <script src="js/lib/DataStream.js"></script>
-    <script src="ultra.js?v=<?=microtime()?>"></script>
+    <script src="src/index.js?v=<?=microtime()?>"></script>
 </head>
 <body>
 <div id="content_wrap">
