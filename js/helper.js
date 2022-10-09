@@ -1,9 +1,11 @@
 //Helper functions
-function mapLoaded() {
-    return (map.length > 0);
+import * as globals from "./globals";
+
+export function mapLoaded() {
+    return (globals.writeGlobals.map.length > 0);
 }
 
-function getImage(code, hexcode) {
+export function getImage(code, hexcode) {
     if (code == "FE") {
         return "Invisible"; //FE is sky floor, and also first row of outposts (FE00, FE01, etc)
     } else if (code == "FD") {
@@ -17,28 +19,28 @@ function getImage(code, hexcode) {
     }
 }
 
-function getCell(row, col, getNearest) {
+export function getCell(row, col, getNearest) {
     if (!getNearest) {
-        if (row < 0 || row >= TOTAL_ROWS || col < 1 || col > VIEW_COLS_PER_ROW) {
+        if (row < 0 || row >= globals.writeGlobals.TOTAL_ROWS || col < 1 || col > globals.VIEW_COLS_PER_ROW) {
             return false;
         }
         return map[row][col];
     }
     if (row < 0) {
         row = 0;
-    } else if (row >= TOTAL_ROWS) {
-        row = TOTAL_ROWS - 1;
+    } else if (row >= globals.writeGlobals.TOTAL_ROWS) {
+        row = globals.writeGlobals.TOTAL_ROWS - 1;
     }
     if (col < 1) {
         col = 1;
-    } else if (col > VIEW_COLS_PER_ROW) {
-        col = VIEW_COLS_PER_ROW;
+    } else if (col > globals.VIEW_COLS_PER_ROW) {
+        col = globals.VIEW_COLS_PER_ROW;
     }
     return map[row][col];
 
 }
 
-function findCorners(selection) {
+export function findCorners(selection) {
     var r = {
         startRow: 9999,
         startCol: 9999,
@@ -63,9 +65,25 @@ function findCorners(selection) {
     return r;
 }
 
-function getRandomInt(min, max) {
+export function getRandomInt(min, max) {
     //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+/**
+ * @see https://stackoverflow.com/questions/27078285/simple-throttle-in-javascript
+ */
+export function throttle(callback, limit) {
+    var waiting = false;                      // Initially, we're not waiting
+    return function () {                      // We return a throttled function
+        if (!waiting) {                       // If we're not waiting
+            callback.apply(this, arguments);  // Execute users function
+            waiting = true;                   // Prevent future invocations
+            setTimeout(function () {          // After a period of time
+                waiting = false;              // And allow future invocations
+            }, limit);
+        }
+    }
 }

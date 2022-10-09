@@ -1,0 +1,43 @@
+{
+  "name": "ultramotherload",
+  "version": "1.0.0",
+  "description": "A fully featured map editor for Super Motherload written only in JS. Uses the FileReader API.",
+  "scripts": {
+    "build": "parcel build index.html",
+    "start": "parcel index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamLeatherdale/ultramotherload.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SamLeatherdale/ultramotherload/issues"
+  },
+  "homepage": "https://github.com/SamLeatherdale/ultramotherload#readme",
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.7.0",
+    "@types/jquery": "^3.5.14",
+    "parcel": "^2.7.0",
+    "parcel-reporter-static-files-copy": "^1.4.0",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "bootstrap": "^4.6.2",
+    "bootstrap-switch": "^3.4.0",
+    "bootstrap-toggle": "^2.2.2",
+    "font-awesome": "^4.7.0",
+    "jquery-ui": "^1.13.2",
+    "popper.js": "^1.16.1"
+  },
+  "alias": {
+    "jquery": {
+      "global": "$"
+    }
+  },
+  "staticFiles": {
+    "staticPath": "res",
+    "staticOutPath": "res"
+  }
+}

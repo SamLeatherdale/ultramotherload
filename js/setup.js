@@ -1,16 +1,12 @@
 //Insertion point
-$(function() {
-    // Check for the various File API support.
-    if (!(window.File && window.FileReader)) {
-        ShowLoadWarning("This browser doesn't support the JavaScript File APIs.");
-        return;
-    }
+import { UpdateCanvasSize, ZoomUpdate } from "./canvas";
+import { LoadDefaultMap, LoadFile, SaveFile } from "./io";
+import { CheckActionState, CreateMaterialsPanel, KeypressHandler, SelectAction,
+    SelectMaterial, SelectTool } from "./ui";
+import * as globals from "./globals";
 
-    setInterval(IconColorChange, ICON_COLOR_DELAY);
-    LoadImages();
-});
 
-function Setup() {
+export function Setup() {
     //Runs after load images is complete
     CreateMaterialsPanel();
     UpdateCanvasSize();
@@ -19,6 +15,7 @@ function Setup() {
     $("#map_zoom").change(ZoomUpdate);
     $(window).resize(UpdateCanvasSize);
 
+    $("#save_map").click(SaveFile)
     $(".button-tool").click(SelectTool);
     $("#tool_select").click();
 
@@ -41,9 +38,9 @@ function Setup() {
         onText: "On",
         offText: "Off",
         onSwitchChange: function(event, state) {
-            safe_mode = state;
-            if (!!last_selected) {
-                last_selected.displayInfo();
+            globals.writeGlobals.safe_mode = state;
+            if (!!globals.writeGlobals.last_selected) {
+                globals.writeGlobals.last_selected.displayInfo();
             }
         }
     })
