@@ -1,7 +1,8 @@
 //UI functions
+import { throttle } from "lodash";
 import { Redraw } from "./canvas";
 import * as globals from "./globals";
-import { getCell, getImage, getRandomInt, throttle } from "./helper";
+import { getCell, getImage, getRandomInt } from "./helper";
 import { state } from "./globals";
 
 export function CreateScrollbar() {
@@ -45,7 +46,10 @@ export function ScrollButtonOnClick(target: HTMLElement) {
     }
 }
 
-const throttledRedraw = throttle(Redraw, 16);
+const throttledRedraw = throttle(Redraw, 16, {
+    leading: true,
+    trailing: true,
+});
 
 export function UpdateCurrentRow(newvalue: number, debounce?: boolean) {
     //console.log("Current row: " + newvalue);
@@ -59,9 +63,10 @@ export function UpdateCurrentRow(newvalue: number, debounce?: boolean) {
     $("#map_scrollbar").slider("value", state.max_view_rows - newvalue);
     $("#map_scrollbar .ui-slider-handle").text(state.current_row);
     $("#input_current_row").val(state.current_row);
-    var current_row_relative = globals.ROWS_ABOVE_SURFACE - state.current_row;
+    $("#max_rows").text(`/ ${state.max_view_rows}`);
+    const current_row_relative = globals.ROWS_ABOVE_SURFACE - state.current_row;
     $("#input_current_depth").val(
-        current_row_relative * globals.INGAME_DEPTH_RATIO,
+        Math.round(current_row_relative * globals.INGAME_DEPTH_RATIO),
     );
     if (debounce) {
         throttledRedraw();
@@ -71,9 +76,8 @@ export function UpdateCurrentRow(newvalue: number, debounce?: boolean) {
 }
 
 export function CreateMaterialsPanel() {
-    var m;
     Object.entries(globals.materials).forEach(([code, name]) => {
-        m = $(".material-container:first-child").clone();
+        const m = $(".material-container:first-child").clone();
         m.attr("data-code", code);
         m.find(".material-icon").css({
             backgroundImage: "url(res/" + getImage(code, code + "00") + ".jpg)",
@@ -114,7 +118,7 @@ export function SelectAction(target: HTMLElement) {
     if ($(target).hasClass("ui-state-disabled")) {
         return;
     }
-    var action = $(target).attr("id");
+    const action = $(target).attr("id");
     if (action == "action_replace") {
         replaceSelectedCells();
     } else if (action == "action_copy") {
@@ -164,9 +168,8 @@ export function CheckActionState() {
     }
 }
 
-export function KeypressHandler(e: KeyboardEvent) {
-    var pressed = e.type == "keydown";
-    var key = e.which;
+export function KeypressHandler(type: string, key: number) {
+    const pressed = type == "keydown";
 
     //Save current state for other functions
     if (key == 16) {

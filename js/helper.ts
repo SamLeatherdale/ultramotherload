@@ -75,22 +75,3 @@ export function getRandomInt(min: number, max: number) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
-
-/**
- * @see https://stackoverflow.com/questions/27078285/simple-throttle-in-javascript
- */
-export function throttle(callback: () => unknown, limit: number | undefined) {
-    var waiting = false; // Initially, we're not waiting
-    return function () {
-        // We return a throttled function
-        if (!waiting) {
-            // If we're not waiting
-            callback(); // Execute users function
-            waiting = true; // Prevent future invocations
-            setTimeout(function () {
-                // After a period of time
-                waiting = false; // And allow future invocations
-            }, limit);
-        }
-    };
-}

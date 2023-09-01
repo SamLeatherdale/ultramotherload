@@ -3,9 +3,6 @@ import "popper.js/dist/popper.min";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min";
 
-import "bootstrap-switch/dist/js/bootstrap-switch.min";
-import "bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css";
-
 import "jquery-ui/dist/themes/base/jquery-ui.min.css";
 import "font-awesome/css/font-awesome.min.css";
 

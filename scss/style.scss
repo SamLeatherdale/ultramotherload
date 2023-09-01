@@ -20,7 +20,7 @@ body {
     text-align: left;
 }
 .popover {
-    max-width: none;
+    max-width: none !important;
 }
 .card-header {
     font-weight: 500;
@@ -188,11 +188,9 @@ main {
     color: #f24856;
 }
 #position_infobox input {
-    width: 100px;
-    padding: 0.5rem;
-}
-#input_current_row {
     display: inline-block;
+    width: 85px;
+    padding: 0.5rem;
 }
 #input_group_depth {
     float: left;
@@ -205,15 +203,9 @@ main {
 }
 #map_materials_container {
     width: 390px;
-
-    .material-container {
-        float: left;
-        width: 48%;
-
-        &:nth-child(2n + 1) {
-            margin-right: 3%;
-        }
-    }
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
 }
 #current_material_container {
     display: block;
@@ -243,7 +235,12 @@ main {
 }
 
 label[for='input_safemode'] {
-    margin-right: 10px;
+    margin-right: 5px;
+}
+
+#input_safemode {
+    width: 16px;
+    height: 16px;
 }
 
 #help_safemode {

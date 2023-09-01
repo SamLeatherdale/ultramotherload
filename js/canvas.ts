@@ -3,6 +3,8 @@ import * as globals from "./globals";
 import { state } from "./globals";
 import { draw_allowed } from "./io";
 import { getImage } from "./helper";
+import { CreateScrollbar, UpdateCurrentRow } from "./ui";
+import ClickEvent = JQuery.ClickEvent;
 
 let ctx: CanvasRenderingContext2D;
 //Draw colours
@@ -18,9 +20,9 @@ export function Redraw() {
     if (!draw_allowed) {
         return;
     }
-    var zoom_img_size = IMG_SIZE * zoom_level;
-    var viewable_selected_cells = [];
-    ctx.clearRect(0, 0, $("#map").width, $("#map").height);
+    const zoom_img_size = IMG_SIZE * zoom_level;
+    const viewable_selected_cells = [];
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     //Draw special features (if applicable)
     $.each(globals.OUTPOSTS, function (i, outpost) {
@@ -78,7 +80,7 @@ export function Redraw() {
     //Draw cell outlines last
     $.each(viewable_selected_cells, function (i, outline) {
         ctx.strokeStyle = selected_color;
-        if (outline.cell.id == state.last_selected.id) {
+        if (outline.cell.id == state.last_selected?.id) {
             ctx.strokeStyle = last_selected_color;
         } else if (outline.cell.isPasting()) {
             ctx.strokeStyle = paste_color;
@@ -94,28 +96,32 @@ export function Redraw() {
 }
 
 export function UpdateCanvasSize() {
-    var canvas = $("#map")[0] as HTMLCanvasElement;
-    var max_height =
-        $(window).height() -
-        $("#header").outerHeight(true) -
-        $("#footer").outerHeight(true) -
-        20;
+    const canvas = $("#map")[0] as HTMLCanvasElement;
+    const windowHeight = $(window).height() as number;
+    const headerHeight = $("#header").outerHeight(true) as number;
+    const footerHeight = $("#footer").outerHeight(true) as number;
+    const max_height = windowHeight - headerHeight - footerHeight - 20;
     state.rows_per_view = Math.floor(max_height / (IMG_SIZE * zoom_level));
-    var newwidth = globals.VIEW_COLS_PER_ROW * IMG_SIZE * zoom_level;
-    var newheight = state.rows_per_view * IMG_SIZE * zoom_level;
+    state.max_view_rows = state.total_rows - state.rows_per_view;
+    if (state.current_row + state.rows_per_view > state.total_rows) {
+        state.current_row = state.total_rows - state.rows_per_view;
+    }
+    const newWidth = globals.VIEW_COLS_PER_ROW * IMG_SIZE * zoom_level;
+    const newHeight = state.rows_per_view * IMG_SIZE * zoom_level;
 
-    canvas.width = newwidth;
-    canvas.height = newheight;
-    $("#map_scrollcontrols").css({ height: newheight });
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    $("#map_scrollcontrols").css({ height: newHeight });
     ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    Redraw();
+    CreateScrollbar();
+    UpdateCurrentRow(state.current_row);
 }
 
-export function CanvasClick(e: MouseEvent) {
-    var targetRow =
+export function CanvasClick(e: ClickEvent) {
+    const targetRow =
         state.current_row + Math.floor(e.offsetY / (IMG_SIZE * zoom_level));
-    var targetCol = Math.floor(e.offsetX / (IMG_SIZE * zoom_level)) + 1; //Add one to account for marker
-    var target = state.map[targetRow][targetCol];
+    const targetCol = Math.floor(e.offsetX / (IMG_SIZE * zoom_level)) + 1; //Add one to account for marker
+    const target = state.map[targetRow][targetCol];
     target.click();
 }
 
