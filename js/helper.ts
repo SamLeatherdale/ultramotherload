@@ -1,11 +1,9 @@
 //Helper functions
 import * as globals from "./globals";
-
-export function mapLoaded() {
-    return (globals.writeGlobals.map.length > 0);
-}
-
-export function getImage(code, hexcode) {
+import { state } from "./globals";
+import { Cell } from "./cell";
+import { CellLike } from "./classes";
+export function getImage(code: string, hexcode: string) {
     if (code == "FE") {
         return "Invisible"; //FE is sky floor, and also first row of outposts (FE00, FE01, etc)
     } else if (code == "FD") {
@@ -19,35 +17,41 @@ export function getImage(code, hexcode) {
     }
 }
 
-export function getCell(row, col, getNearest) {
+export function getCell(row: number, col: number, getNearest: boolean) {
     if (!getNearest) {
-        if (row < 0 || row >= globals.writeGlobals.TOTAL_ROWS || col < 1 || col > globals.VIEW_COLS_PER_ROW) {
+        if (
+            row < 0 ||
+            row >= state.total_rows ||
+            col < 1 ||
+            col > globals.VIEW_COLS_PER_ROW
+        ) {
             return false;
         }
-        return map[row][col];
+        return state.map[row][col];
     }
     if (row < 0) {
         row = 0;
-    } else if (row >= globals.writeGlobals.TOTAL_ROWS) {
-        row = globals.writeGlobals.TOTAL_ROWS - 1;
+    } else if (row >= state.total_rows) {
+        row = state.total_rows - 1;
     }
     if (col < 1) {
         col = 1;
     } else if (col > globals.VIEW_COLS_PER_ROW) {
         col = globals.VIEW_COLS_PER_ROW;
     }
-    return map[row][col];
-
+    return state.map[row][col];
 }
 
-export function findCorners(selection) {
+export function findCorners(
+    selection: { [key: number]: CellLike } | CellLike[],
+) {
     var r = {
         startRow: 9999,
         startCol: 9999,
         endRow: 0,
-        endCol: 0
+        endCol: 0,
     };
-    $.each(selection, function(id, cell) {
+    $.each(selection, function (id, cell) {
         if (cell.row < r.startRow) {
             r.startRow = cell.row;
         }
@@ -65,7 +69,7 @@ export function findCorners(selection) {
     return r;
 }
 
-export function getRandomInt(min, max) {
+export function getRandomInt(min: number, max: number) {
     //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -75,15 +79,18 @@ export function getRandomInt(min, max) {
 /**
  * @see https://stackoverflow.com/questions/27078285/simple-throttle-in-javascript
  */
-export function throttle(callback, limit) {
-    var waiting = false;                      // Initially, we're not waiting
-    return function () {                      // We return a throttled function
-        if (!waiting) {                       // If we're not waiting
-            callback.apply(this, arguments);  // Execute users function
-            waiting = true;                   // Prevent future invocations
-            setTimeout(function () {          // After a period of time
-                waiting = false;              // And allow future invocations
+export function throttle(callback: () => unknown, limit: number | undefined) {
+    var waiting = false; // Initially, we're not waiting
+    return function () {
+        // We return a throttled function
+        if (!waiting) {
+            // If we're not waiting
+            callback(); // Execute users function
+            waiting = true; // Prevent future invocations
+            setTimeout(function () {
+                // After a period of time
+                waiting = false; // And allow future invocations
             }, limit);
         }
-    }
+    };
 }
