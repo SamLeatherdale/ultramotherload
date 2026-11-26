@@ -1,6 +1,10 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+    server: {
+        // Listen on every interface so other devices on the LAN can open the dev server.
+        host: true,
+    },
     fmt: {
         tabWidth: 4,
     },

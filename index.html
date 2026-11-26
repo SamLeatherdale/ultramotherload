@@ -66,6 +66,16 @@
                         </label>
 
                         <button id="save_map" class="btn btn-success">Save map</button>
+                        <button
+                            type="button"
+                            class="ui-button ui-widget ui-corner-all"
+                            data-toggle="modal"
+                            data-target="#help_modal"
+                            id="button_help"
+                        >
+                            <i class="fa fa-question-circle" aria-hidden="true"></i
+                            ><span>Help</span>
+                        </button>
                         <a id="output_map" download="map" href="">Download edited map</a>
                     </div>
                     <div id="load_error" class="alert alert-danger alert-dismissible" role="alert">
@@ -83,26 +93,52 @@
 
                 <div id="map_editcontrols">
                     <div class="controls-section">
+                        <div class="mode-toggle" role="group" aria-label="Edit mode">
+                            <button
+                                type="button"
+                                class="button-tool"
+                                id="tool_select"
+                                aria-pressed="true"
+                            >
+                                <i class="fa fa-mouse-pointer" aria-hidden="true"></i
+                                ><span>Select</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="button-tool"
+                                id="tool_overwrite"
+                                aria-pressed="false"
+                            >
+                                <i class="fa fa-hand-pointer-o" aria-hidden="true"></i
+                                ><span>Overwrite</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="controls-section">
                         <button
-                            class="ui-button ui-widget ui-corner-all button-tool"
-                            id="tool_select"
+                            type="button"
+                            class="ui-button ui-widget ui-corner-all ui-state-disabled"
+                            id="action_undo"
                         >
-                            <i class="fa fa-mouse-pointer"></i><span>Select</span>
+                            <i class="fa fa-undo" aria-hidden="true"></i><span>Undo</span>
                         </button>
                         <button
-                            class="ui-button ui-widget ui-corner-all button-tool"
-                            id="tool_overwrite"
+                            type="button"
+                            class="ui-button ui-widget ui-corner-all ui-state-disabled"
+                            id="action_redo"
                         >
-                            <i class="fa fa-hand-pointer-o"></i><span>Overwrite</span>
+                            <i class="fa fa-repeat" aria-hidden="true"></i><span>Redo</span>
                         </button>
                     </div>
 
                     <div class="controls-section">
                         <button
+                            type="button"
                             class="ui-button ui-widget ui-corner-all button-action ui-state-disabled"
                             id="action_replace"
                         >
-                            <i class="fa fa-pencil"></i><span>Replace</span>
+                            <i class="fa fa-pencil" aria-hidden="true"></i><span>Replace</span>
                         </button>
                         <button
                             class="ui-button ui-widget ui-corner-all button-action ui-state-disabled"
@@ -125,61 +161,55 @@
                     </div>
 
                     <div class="controls-section">
-                        <label for="map_zoom"><i class="fa fa-search"></i></label>
-                        <select id="map_zoom">
-                            <option value="0.5">50%</option>
-                            <option value="0.8">80%</option>
-                            <option value="1" selected>100%</option>
-                            <option value="1.2">120%</option>
-                            <option value="1.5">150%</option>
-                            <option value="2">200%</option>
-                        </select>
-                    </div>
-
-                    <div class="controls-section">
-                        <button
-                            class="ui-button ui-widget ui-corner-all"
-                            data-toggle="modal"
-                            data-target="#help_modal"
-                            id="button_help"
-                        >
-                            <i class="fa fa-question-circle"></i><span>Help</span>
-                        </button>
+                        <label class="zoom-control">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                            <select id="map_zoom" aria-label="Zoom">
+                                <option value="0.5">50%</option>
+                                <option value="0.8">80%</option>
+                                <option value="1" selected>100%</option>
+                                <option value="1.2">120%</option>
+                                <option value="1.5">150%</option>
+                                <option value="2">200%</option>
+                            </select>
+                        </label>
                     </div>
                 </div>
             </header>
 
             <main>
-                <div id="load_splash">
-                    <div id="load_splash_container">
-                        <div id="load_splash_content">
-                            <i id="load_splash_icon" class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
-                            <i
-                                id="load_splash_warning"
-                                class="fa fa-3x fa-exclamation-triangle"
-                            ></i>
-                            <h1 id="load_splash_message">Loading assets...</h1>
+                <div id="map_stage">
+                    <div id="load_splash">
+                        <div id="load_splash_container">
+                            <div id="load_splash_content">
+                                <i
+                                    id="load_splash_icon"
+                                    class="fa fa-refresh fa-spin fa-3x fa-fw"
+                                ></i>
+                                <i
+                                    id="load_splash_warning"
+                                    class="fa fa-3x fa-exclamation-triangle"
+                                ></i>
+                                <h1 id="load_splash_message">Loading assets...</h1>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <canvas width="1080" height="600" id="map"></canvas>
+                    <canvas width="1080" height="600" id="map"></canvas>
 
-                <div id="map_scrollcontrols">
-                    <button class="ui-button ui-widget ui-corner-all" id="map_upmany">
-                        <i class="fa fa-angle-double-up"></i>
-                    </button>
-                    <button class="ui-button ui-widget ui-corner-all" id="map_upone">
-                        <i class="fa fa-angle-up"></i>
-                    </button>
-                    <div id="map_scrollbar">
-                        <div class="ui-slider-handle"></div>
+                    <div id="map_scrollcontrols">
+                        <button class="ui-button ui-widget ui-corner-all" id="map_upmany">
+                            <i class="fa fa-angle-double-up"></i>
+                        </button>
+                        <button class="ui-button ui-widget ui-corner-all" id="map_upone">
+                            <i class="fa fa-angle-up"></i>
+                        </button>
+                        <div id="map_scrollbar"></div>
+                        <button class="ui-button ui-widget ui-corner-all" id="map_downone">
+                            <i class="fa fa-angle-down"></i>
+                        </button>
+                        <button class="ui-button ui-widget ui-corner-all" id="map_downmany">
+                            <i class="fa fa-angle-double-down"></i>
+                        </button>
                     </div>
-                    <button class="ui-button ui-widget ui-corner-all" id="map_downone">
-                        <i class="fa fa-angle-down"></i>
-                    </button>
-                    <button class="ui-button ui-widget ui-corner-all" id="map_downmany">
-                        <i class="fa fa-angle-double-down"></i>
-                    </button>
                 </div>
 
                 <div id="map_infoboxes">
@@ -267,43 +297,51 @@
                         </div>
                     </div>
 
-                    <div id="map_materials" class="controls-section">
-                        <h4>Current Material:</h4>
-                        <a tabindex="10" id="current_material_container" class="inherit-link"></a>
+                    <div id="map_materials" class="controls-section card">
+                        <div class="card-header">
+                            <div>Current Material</div>
+                        </div>
+                        <div class="card-body">
+                            <div id="material_controls">
+                                <a
+                                    tabindex="10"
+                                    id="current_material_container"
+                                    class="inherit-link"
+                                ></a>
 
-                        <div id="map_materials_panel" class="clearfix input-group">
-                            <div class="card-header">Select a material</div>
-                            <div id="map_materials_container" class="clearfix">
-                                <div class="material-container ui-button clearfix" data-code="">
-                                    <div class="material-icon"></div>
-                                    <div class="material-title"></div>
+                                <div id="map_materials_panel" class="input-group">
+                                    <div class="card-header">Select a material</div>
+                                    <div id="map_materials_container">
+                                        <div class="material-container ui-button" data-code="">
+                                            <div class="material-icon"></div>
+                                            <div class="material-title"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="safemode_row">
+                                    <button
+                                        type="button"
+                                        id="button_safemode"
+                                        class="btn btn-success btn-sm"
+                                        aria-pressed="true"
+                                    >
+                                        <i class="fa fa-lock"></i><span>Safe Mode: On</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="help_safemode"
+                                        class="btn btn-link p-0"
+                                        data-toggle="modal"
+                                        data-target="#safemode_modal"
+                                        aria-label="What is Safe Mode?"
+                                    >
+                                        <i class="fa fa-question-circle"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-
-                        <div id="safemode_row">
-                            <button
-                                type="button"
-                                id="button_safemode"
-                                class="btn btn-success btn-sm"
-                                aria-pressed="true"
-                            >
-                                <i class="fa fa-lock"></i><span>Safe Mode: On</span>
-                            </button>
-                            <button
-                                type="button"
-                                id="help_safemode"
-                                class="btn btn-link p-0"
-                                data-toggle="modal"
-                                data-target="#safemode_modal"
-                                aria-label="What is Safe Mode?"
-                            >
-                                <i class="fa fa-question-circle"></i>
-                            </button>
-                        </div>
                     </div>
-
-                    <div class="controls-section"></div>
                 </div>
             </main>
         </div>
@@ -342,6 +380,23 @@
                             yourself a bit of a boost, or even create a maze or some other kind of
                             challenge!
                         </p>
+                        <h5>How do I select and edit tiles?</h5>
+                        <p>
+                            Drag across the map to select a rectangle of tiles. Dragging again
+                            replaces that selection. Click a tile to start a new selection on that
+                            tile. Hold Control and click to add or remove individual tiles. Hold
+                            Shift and click to add the rectangle between the last selected tile and
+                            the one you click.
+                        </p>
+                        <p>
+                            <strong>Select</strong> only changes the selection.
+                            <strong>Overwrite</strong> uses the same gestures, then paints the
+                            resulting selection with the current material. A click paints that one
+                            tile. Control-click adds or removes a tile and paints whatever remains
+                            selected. <strong>Copy</strong> keeps the selection as the source; click
+                            the map to place the paste preview. Badges mark the copy and paste
+                            regions. <strong>Paste</strong> writes those tiles into the map.
+                        </p>
                         <h5>Where are the map files stored?</h5>
                         <p>
                             The map files are stored in your user account's AppData folder:
@@ -371,8 +426,8 @@
                         </h5>
                         <p>
                             Super Motherload discovers worlds by scanning for entries named
-                            <code>savedata\world??</code>—there is no separate manifest file. There
-                            are a few gotchas you might run into:
+                            <code>savedata\world??</code>. There are a few gotchas you might run
+                            into:
                         </p>
                         <ul>
                             <li>

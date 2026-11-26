@@ -31,7 +31,7 @@ export function Setup() {
     });
     $("#tool_select").trigger("click");
 
-    $(".button-action").on("click", function () {
+    $(".button-action, #action_undo, #action_redo").on("click", function () {
         SelectAction(this);
     });
     CheckActionState();
@@ -68,6 +68,14 @@ export function Setup() {
         .trigger("click"); //Select first safe material as default
     //$("#current_material_container").click(OpenMaterialPanel);
 
-    $(document).on("keyup keydown", (e) => KeypressHandler(e.type, e.which!));
+    $(document).on("keyup keydown", (e) => {
+        const typing =
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement;
+        if (e.type === "keydown" && e.ctrlKey && !typing && (e.which === 90 || e.which === 89)) {
+            e.preventDefault();
+        }
+        KeypressHandler(e.type, e.which!);
+    });
     LoadDefaultMap();
 }

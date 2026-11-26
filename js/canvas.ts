@@ -1,18 +1,40 @@
 //Canvas functions
 import $ from "jquery";
 import { getCellSpriteKey, getTileSpriteRect } from "./autotile";
+import { replaceSelectionWithRectangle } from "./cell";
 import * as globals from "./globals";
 import { state } from "./globals";
+import { findCorners } from "./helper";
 import { TILE_SHEET_KEY } from "./images";
 import { draw_allowed } from "./io";
 import { CreateScrollbar, UpdateCurrentRow } from "./ui";
-import ClickEvent = JQuery.ClickEvent;
 
 let ctx: CanvasRenderingContext2D;
-//Draw colours
-const selected_color = "#00fffa";
-const last_selected_color = "#0072ff";
-const paste_color = "#9800ff";
+const SELECT_FILL = "rgba(0, 120, 215, 0.28)";
+const SELECT_STROKE = "#0078d7";
+const PASTE_FILL = "rgba(122, 63, 242, 0.28)";
+const PASTE_STROKE = "#7a3ff2";
+const MARQUEE_FILL = "rgba(0, 120, 215, 0.2)";
+const MARQUEE_STROKE = "#0078d7";
+
+type PaintedCell = {
+    row: number;
+    col: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+};
+
+let marquee: { startRow: number; startCol: number; endRow: number; endCol: number } | null = null;
+let drag: {
+    pointerId: number;
+    startRow: number;
+    startCol: number;
+    endRow: number;
+    endCol: number;
+} | null = null;
+let redrawQueued = false;
 
 let zoom_level = 1;
 
@@ -29,7 +51,8 @@ export function Redraw() {
     const dpr = window.devicePixelRatio || 1;
     const zoom_img_size = IMG_SIZE * zoom_level;
     const tileSheet = globals.images[TILE_SHEET_KEY];
-    const viewable_selected_cells = [];
+    const selectedPaint: PaintedCell[] = [];
+    const pastePaint: PaintedCell[] = [];
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
@@ -133,14 +156,10 @@ export function Redraw() {
                     ctx.drawImage(tileSheet, rect.sx, rect.sy, rect.sw, rect.sh, x0, y0, w, h);
                 }
             }
-            if (cell.isSelected() || cell.isPasting()) {
-                viewable_selected_cells.push({
-                    cell,
-                    x: x0,
-                    y: y0,
-                    w,
-                    h,
-                });
+            if (cell.isPasting()) {
+                pastePaint.push({ row: cell.row, col: cell.col, x: x0, y: y0, w, h });
+            } else if (cell.isSelected()) {
+                selectedPaint.push({ row: cell.row, col: cell.col, x: x0, y: y0, w, h });
             }
         }
     }
@@ -168,23 +187,132 @@ export function Redraw() {
         ctx.restore();
     }
 
-    //Draw cell outlines last
-    $.each(viewable_selected_cells, function (i, outline) {
-        ctx.strokeStyle = selected_color;
-        if (outline.cell.id == state.last_selected?.id) {
-            ctx.strokeStyle = last_selected_color;
-        } else if (outline.cell.isPasting()) {
-            ctx.strokeStyle = paste_color;
+    drawRegion(
+        selectedPaint,
+        (row, col) => !!state.map[row]?.[col]?.isSelected(),
+        SELECT_FILL,
+        SELECT_STROKE,
+    );
+    drawRegion(
+        pastePaint,
+        (row, col) => !!state.map[row]?.[col]?.isPasting(),
+        PASTE_FILL,
+        PASTE_STROKE,
+    );
+    if (state.current_action === "action_copy") {
+        drawRegionBadge("Copy", state.selected_cells, SELECT_STROKE);
+        drawRegionBadge("Paste", state.paste_cells, PASTE_STROKE);
+    }
+    if (marquee) {
+        drawMarquee(marquee.startRow, marquee.startCol, marquee.endRow, marquee.endCol, dpr);
+    }
+}
+
+function drawRegion(
+    cells: PaintedCell[],
+    member: (row: number, col: number) => boolean,
+    fill: string,
+    stroke: string,
+) {
+    if (cells.length === 0) {
+        return;
+    }
+    ctx.fillStyle = fill;
+    for (const cell of cells) {
+        ctx.fillRect(cell.x, cell.y, cell.w, cell.h);
+    }
+    ctx.save();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1;
+    ctx.lineCap = "square";
+    ctx.beginPath();
+    for (const cell of cells) {
+        const { row, col, x, y, w, h } = cell;
+        if (!member(row - 1, col)) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
         }
-        ctx.lineWidth = Math.max(1, Math.round(2 * dpr)) / dpr;
-        const inset = ctx.lineWidth / 2;
-        ctx.strokeRect(
-            outline.x + inset,
-            outline.y + inset,
-            outline.w - ctx.lineWidth,
-            outline.h - ctx.lineWidth,
-        );
-    });
+        if (!member(row + 1, col)) {
+            ctx.moveTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+        }
+        if (!member(row, col - 1)) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + h);
+        }
+        if (!member(row, col + 1)) {
+            ctx.moveTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+        }
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawRegionBadge(
+    text: string,
+    cells: { [key: number]: { row: number; col: number } },
+    accent: string,
+) {
+    const list = Object.values(cells);
+    if (list.length === 0) {
+        return;
+    }
+    const corners = findCorners(list);
+    const inView =
+        corners.endRow >= state.current_row &&
+        corners.startRow < state.current_row + state.rows_per_view;
+    if (!inView) {
+        return;
+    }
+    const zoom = IMG_SIZE * zoom_level;
+    const dpr = window.devicePixelRatio || 1;
+    const x = snapToDevicePixel((corners.startCol - 1) * zoom, dpr);
+    const y = snapToDevicePixel((corners.startRow - state.current_row) * zoom, dpr);
+    const viewWidth = ctx.canvas.width / dpr;
+    const viewHeight = ctx.canvas.height / dpr;
+
+    ctx.save();
+    ctx.font = "600 11px Segoe UI, sans-serif";
+    const padX = 6;
+    const height = 16;
+    const width = Math.ceil(ctx.measureText(text).width) + padX * 2 + 3;
+    let badgeX = x;
+    let badgeY = y - height - 3;
+    if (badgeY < 2) {
+        badgeY = Math.min(Math.max(2, y + 3), viewHeight - height - 2);
+    }
+    badgeX = Math.min(Math.max(2, badgeX), Math.max(2, viewWidth - width - 2));
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, width, height, 3);
+    ctx.fillStyle = "rgba(20, 20, 20, 0.9)";
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillRect(badgeX, badgeY, 3, height);
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, badgeX + padX + 1, badgeY + height / 2);
+    ctx.restore();
+}
+
+function drawMarquee(rowA: number, colA: number, rowB: number, colB: number, dpr: number) {
+    const zoom = IMG_SIZE * zoom_level;
+    const startRow = Math.min(rowA, rowB);
+    const endRow = Math.max(rowA, rowB);
+    const startCol = Math.min(colA, colB);
+    const endCol = Math.max(colA, colB);
+    const x = snapToDevicePixel((startCol - 1) * zoom, dpr);
+    const y = snapToDevicePixel((startRow - state.current_row) * zoom, dpr);
+    const w = snapToDevicePixel((endCol - startCol + 1) * zoom, dpr);
+    const h = snapToDevicePixel((endRow - startRow + 1) * zoom, dpr);
+    ctx.save();
+    ctx.fillStyle = MARQUEE_FILL;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = MARQUEE_STROKE;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, Math.max(0, w - 1), Math.max(0, h - 1));
+    ctx.restore();
 }
 
 export function UpdateCanvasSize() {
@@ -212,11 +340,123 @@ export function UpdateCanvasSize() {
     UpdateCurrentRow(state.current_row);
 }
 
-export function CanvasClick(e: ClickEvent) {
-    const targetRow = state.current_row + Math.floor(e.offsetY / (IMG_SIZE * zoom_level));
-    const targetCol = Math.floor(e.offsetX / (IMG_SIZE * zoom_level)) + 1; //Add one to account for marker
-    const target = state.map[targetRow][targetCol];
-    target.click();
+function cellAt(offsetX: number, offsetY: number) {
+    if (!state.map.length || state.rows_per_view < 1) {
+        return null;
+    }
+    const size = IMG_SIZE * zoom_level;
+    const viewRow = Math.min(state.rows_per_view - 1, Math.max(0, Math.floor(offsetY / size)));
+    const viewCol = Math.min(
+        globals.VIEW_COLS_PER_ROW - 1,
+        Math.max(0, Math.floor(offsetX / size)),
+    );
+    return state.map[state.current_row + viewRow]?.[viewCol + 1] ?? null;
+}
+
+function requestRedraw() {
+    if (redrawQueued) {
+        return;
+    }
+    redrawQueued = true;
+    requestAnimationFrame(() => {
+        redrawQueued = false;
+        Redraw();
+    });
+}
+
+let pointerBound = false;
+
+export function BindMapPointer() {
+    if (pointerBound) {
+        return;
+    }
+    const canvas = document.getElementById("map");
+    if (!canvas) {
+        return;
+    }
+    pointerBound = true;
+    canvas.addEventListener("pointerdown", onMapPointerDown);
+    canvas.addEventListener("pointermove", onMapPointerMove);
+    canvas.addEventListener("pointerup", onMapPointerUp);
+    canvas.addEventListener("pointercancel", onMapPointerCancel);
+}
+
+function onMapPointerDown(event: PointerEvent) {
+    if (event.button !== 0 || !(event.currentTarget instanceof HTMLCanvasElement)) {
+        return;
+    }
+    const cell = cellAt(event.offsetX, event.offsetY);
+    if (!cell) {
+        return;
+    }
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drag = {
+        pointerId: event.pointerId,
+        startRow: cell.row,
+        startCol: cell.col,
+        endRow: cell.row,
+        endCol: cell.col,
+    };
+    marquee = null;
+    event.preventDefault();
+}
+
+function onMapPointerMove(event: PointerEvent) {
+    if (!drag || event.pointerId !== drag.pointerId || state.current_action === "action_copy") {
+        return;
+    }
+    const cell = cellAt(event.offsetX, event.offsetY);
+    if (!cell || (cell.row === drag.endRow && cell.col === drag.endCol)) {
+        return;
+    }
+    drag.endRow = cell.row;
+    drag.endCol = cell.col;
+    marquee =
+        cell.row !== drag.startRow || cell.col !== drag.startCol
+            ? {
+                  startRow: drag.startRow,
+                  startCol: drag.startCol,
+                  endRow: cell.row,
+                  endCol: cell.col,
+              }
+            : null;
+    requestRedraw();
+}
+
+function onMapPointerUp(event: PointerEvent) {
+    if (!drag || event.pointerId !== drag.pointerId) {
+        return;
+    }
+    const finished = drag;
+    drag = null;
+    marquee = null;
+    if (state.current_action === "action_copy") {
+        const cell = cellAt(event.offsetX, event.offsetY);
+        (cell ?? state.map[finished.startRow]?.[finished.startCol])?.click();
+        return;
+    }
+    const spansCells =
+        finished.endRow !== finished.startRow || finished.endCol !== finished.startCol;
+    if (spansCells) {
+        replaceSelectionWithRectangle(
+            finished.startRow,
+            finished.startCol,
+            finished.endRow,
+            finished.endCol,
+        );
+        return;
+    }
+    const gesture = globals.keys.control ? "toggle" : "replace";
+    state.map[finished.startRow]?.[finished.startCol]?.click(gesture);
+}
+
+function onMapPointerCancel(event: PointerEvent) {
+    if (!drag || event.pointerId !== drag.pointerId) {
+        return;
+    }
+    drag = null;
+    marquee = null;
+    requestRedraw();
 }
 
 export function ZoomUpdate() {

@@ -3,27 +3,242 @@ import $ from "jquery";
 import { throttle } from "lodash";
 import { getMaterialIconKey, getTileSpriteRect } from "./autotile";
 import { Redraw } from "./canvas";
+import type { Cell } from "./cell";
 import * as globals from "./globals";
-import { state } from "./globals";
+import { mapSections, state } from "./globals";
 import { getCell, getRandomInt } from "./helper";
 import { tileManifest, tilesSheetUrl } from "./images";
 
+let scrollbarReady = false;
+
 export function CreateScrollbar() {
-    var handle = $("#map_scrollbar .ui-slider-handle");
-    $("#map_scrollbar").slider({
-        orientation: "vertical",
-        range: "min",
-        min: 0,
-        max: state.max_view_rows,
-        value: state.max_view_rows - state.current_row,
-        create: function () {
-            handle.text(state.max_view_rows - $(this).slider("value"));
-        },
-        slide: function (event, ui) {
-            UpdateCurrentRow(state.max_view_rows - (ui.value || 0), true);
-        },
-        stop: function () {},
-    });
+    const root = document.getElementById("map_scrollbar");
+    if (!root) {
+        return;
+    }
+    ensureScrollbar(root);
+    renderScrollbar(root);
+}
+
+function ensureScrollbar(root: HTMLElement) {
+    if (scrollbarReady) {
+        return;
+    }
+    scrollbarReady = true;
+    root.setAttribute("role", "scrollbar");
+    root.setAttribute("aria-orientation", "vertical");
+    root.setAttribute("aria-label", "Map position");
+    root.setAttribute("aria-controls", "map");
+    root.tabIndex = 0;
+
+    const track = document.createElement("div");
+    track.className = "map-scroll-track";
+    const bands = document.createElement("div");
+    bands.className = "map-scroll-bands";
+    const windowEl = document.createElement("div");
+    windowEl.className = "map-scroll-window";
+    track.append(bands, windowEl);
+
+    const thumb = document.createElement("div");
+    thumb.className = "map-scroll-thumb";
+    thumb.textContent = "0";
+
+    const markers = document.createElement("div");
+    markers.className = "map-scroll-markers";
+    root.replaceChildren(track, thumb, markers);
+
+    root.addEventListener("keydown", onScrollbarKeydown);
+    track.addEventListener("pointerdown", onTrackPointerDown);
+    markers.addEventListener("click", onMarkerClick);
+}
+
+function renderScrollbar(root: HTMLElement) {
+    const bands = root.querySelector(".map-scroll-bands");
+    const markers = root.querySelector(".map-scroll-markers");
+    if (!(bands instanceof HTMLElement) || !(markers instanceof HTMLElement)) {
+        return;
+    }
+    if (state.total_rows <= 0) {
+        return;
+    }
+    const sections = mapSections();
+    const stops: string[] = [];
+    for (const section of sections) {
+        const start = (section.startRow / state.total_rows) * 100;
+        const end = ((section.endRow + 1) / state.total_rows) * 100;
+        stops.push(`${section.color} ${start}%`, `${section.color} ${end}%`);
+    }
+    bands.style.background = `linear-gradient(to bottom, ${stops.join(", ")})`;
+
+    markers.replaceChildren(
+        ...sections.map((section, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "map-scroll-marker";
+            button.dataset.row = String(section.startRow);
+            if (index === sections.length - 1) {
+                button.dataset.edge = "end";
+            }
+            button.setAttribute("aria-label", `Jump to ${section.label}`);
+            button.textContent = section.label;
+            return button;
+        }),
+    );
+    layoutMarkers();
+    requestAnimationFrame(layoutMarkers);
+    syncScrollbar();
+}
+
+function layoutMarkers() {
+    const track = document.querySelector("#map_scrollbar .map-scroll-track");
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>(".map-scroll-marker")];
+    if (!(track instanceof HTMLElement) || state.total_rows <= 0 || buttons.length === 0) {
+        return;
+    }
+    const height = track.clientHeight;
+    if (height <= 0) {
+        return;
+    }
+    const gap = 4;
+    const placed = buttons.map((button) => ({
+        button,
+        top: (Number(button.dataset.row) / state.total_rows) * height,
+        height: button.offsetHeight,
+    }));
+    for (let index = 0; index < placed.length; index++) {
+        const minTop = index === 0 ? 0 : placed[index - 1].top + placed[index - 1].height + gap;
+        placed[index].top = Math.max(placed[index].top, minTop);
+    }
+    const last = placed[placed.length - 1];
+    if (last && last.top + last.height > height) {
+        last.top = Math.max(0, height - last.height);
+        for (let index = placed.length - 2; index >= 0; index--) {
+            const maxBottom = placed[index + 1].top - gap;
+            if (placed[index].top + placed[index].height > maxBottom) {
+                placed[index].top = Math.max(0, maxBottom - placed[index].height);
+            }
+        }
+    }
+    for (const item of placed) {
+        item.button.style.top = `${item.top}px`;
+    }
+}
+
+function syncScrollbar() {
+    const root = document.getElementById("map_scrollbar");
+    const track = root?.querySelector(".map-scroll-track");
+    const thumb = root?.querySelector(".map-scroll-thumb");
+    const windowEl = root?.querySelector(".map-scroll-window");
+    if (
+        !(root instanceof HTMLElement) ||
+        !(track instanceof HTMLElement) ||
+        !(thumb instanceof HTMLElement) ||
+        !(windowEl instanceof HTMLElement) ||
+        state.total_rows <= 0
+    ) {
+        return;
+    }
+    const height = track.clientHeight;
+    root.setAttribute("aria-valuemin", "0");
+    root.setAttribute("aria-valuemax", String(Math.max(0, state.max_view_rows)));
+    root.setAttribute("aria-valuenow", String(state.current_row));
+    root.setAttribute("aria-valuetext", `Row ${state.current_row}`);
+    thumb.textContent = String(state.current_row);
+    if (height <= 0) {
+        return;
+    }
+    const topPx = (state.current_row / state.total_rows) * height;
+    const windowHeight = Math.max(4, (state.rows_per_view / state.total_rows) * height);
+    windowEl.style.top = `${topPx}px`;
+    windowEl.style.height = `${windowHeight}px`;
+    const knobHeight = thumb.offsetHeight || 22;
+    const knobTop = Math.min(Math.max(0, topPx - knobHeight / 2), Math.max(0, height - knobHeight));
+    thumb.style.top = `${knobTop}px`;
+}
+
+function rowFromTrackY(track: HTMLElement, clientY: number) {
+    const rect = track.getBoundingClientRect();
+    const ratio = rect.height <= 0 ? 0 : (clientY - rect.top) / rect.height;
+    return ratio * state.total_rows;
+}
+
+function onTrackPointerDown(event: PointerEvent) {
+    if (event.button !== 0 || !(event.currentTarget instanceof HTMLElement)) {
+        return;
+    }
+    const track = event.currentTarget;
+    const originY = event.clientY;
+    const originRow = state.current_row;
+    const pointerId = event.pointerId;
+    let dragged = false;
+    const root = document.getElementById("map_scrollbar");
+    try {
+        track.setPointerCapture(pointerId);
+    } catch {
+        // A pointer that is already gone cannot be captured. The move listeners still apply.
+    }
+    root?.classList.add("is-dragging");
+    const move = (ev: PointerEvent) => {
+        if (ev.pointerId !== pointerId) {
+            return;
+        }
+        if (!dragged && Math.abs(ev.clientY - originY) < 4) {
+            return;
+        }
+        dragged = true;
+        const rect = track.getBoundingClientRect();
+        const delta =
+            rect.height <= 0 ? 0 : ((ev.clientY - originY) / rect.height) * state.total_rows;
+        UpdateCurrentRow(Math.round(originRow + delta), true);
+    };
+    const end = (ev: PointerEvent) => {
+        if (ev.pointerId !== pointerId) {
+            return;
+        }
+        track.removeEventListener("pointermove", move);
+        track.removeEventListener("pointerup", end);
+        track.removeEventListener("pointercancel", end);
+        root?.classList.remove("is-dragging");
+        if (dragged) {
+            UpdateCurrentRow(state.current_row);
+            return;
+        }
+        const row = rowFromTrackY(track, ev.clientY) - state.rows_per_view / 2;
+        UpdateCurrentRow(Math.round(row));
+    };
+    track.addEventListener("pointermove", move);
+    track.addEventListener("pointerup", end);
+    track.addEventListener("pointercancel", end);
+}
+
+function onMarkerClick(event: Event) {
+    const button = (event.target as HTMLElement | null)?.closest("button[data-row]");
+    if (!(button instanceof HTMLButtonElement)) {
+        return;
+    }
+    UpdateCurrentRow(Number(button.dataset.row));
+}
+
+function onScrollbarKeydown(event: KeyboardEvent) {
+    let next = state.current_row;
+    if (event.key === "ArrowDown") {
+        next += event.shiftKey ? 20 : 1;
+    } else if (event.key === "ArrowUp") {
+        next -= event.shiftKey ? 20 : 1;
+    } else if (event.key === "PageDown") {
+        next += state.rows_per_view;
+    } else if (event.key === "PageUp") {
+        next -= state.rows_per_view;
+    } else if (event.key === "Home") {
+        next = 0;
+    } else if (event.key === "End") {
+        next = state.max_view_rows;
+    } else {
+        return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    UpdateCurrentRow(next);
 }
 
 export function ScrollbarOnScroll(event: JQueryMousewheel.JQueryMousewheelEventObject) {
@@ -34,16 +249,15 @@ export function ScrollbarOnScroll(event: JQueryMousewheel.JQueryMousewheelEventO
 }
 
 export function ScrollButtonOnClick(target: HTMLElement) {
-    var SCROLL_MANY = 20;
     var id = $(target).attr("id");
     if (id == "map_upmany") {
-        UpdateCurrentRow(state.current_row - SCROLL_MANY);
+        UpdateCurrentRow(state.current_row - state.rows_per_view);
     } else if (id == "map_upone") {
         UpdateCurrentRow(state.current_row - 1);
     } else if (id == "map_downone") {
         UpdateCurrentRow(state.current_row + 1);
     } else if (id == "map_downmany") {
-        UpdateCurrentRow(state.current_row + SCROLL_MANY);
+        UpdateCurrentRow(state.current_row + state.rows_per_view);
     }
 }
 
@@ -61,8 +275,7 @@ export function UpdateCurrentRow(newvalue: number, debounce?: boolean) {
     } else {
         state.current_row = newvalue;
     }
-    $("#map_scrollbar").slider("value", state.max_view_rows - newvalue);
-    $("#map_scrollbar .ui-slider-handle").text(state.current_row);
+    syncScrollbar();
     $("#input_current_row").val(state.current_row);
     $("#max_rows").text(`/ ${state.max_view_rows}`);
     const current_row_relative = globals.ROWS_ABOVE_SURFACE - state.current_row;
@@ -144,20 +357,96 @@ export function SelectMaterial(target: HTMLElement) {
 }
 
 export function SelectTool(target: HTMLElement) {
-    state.selected_tool = $(target).attr("id") as string;
-    $(".button-tool").removeClass("ui-state-active");
-    $(target).addClass("ui-state-active");
-    if (state.selected_tool == "tool_overwrite") {
-        $("#map").addClass("cursor-pointer");
-    } else {
-        $("#map").removeClass("cursor-pointer");
+    state.selected_tool = target.id;
+    document.querySelectorAll<HTMLButtonElement>(".button-tool").forEach((button) => {
+        button.setAttribute("aria-pressed", button === target ? "true" : "false");
+    });
+    const map = document.getElementById("map");
+    map?.classList.toggle("cursor-pointer", state.selected_tool === "tool_overwrite");
+    map?.classList.toggle("cursor-select", state.selected_tool === "tool_select");
+}
+
+type TileEdit = { id: number; before: string; after: string };
+
+let undoStep: TileEdit[] | null = null;
+let redoStep: TileEdit[] | null = null;
+
+function cellById(id: number) {
+    const row = Math.floor(id / globals.COLS_PER_ROW);
+    const col = id % globals.COLS_PER_ROW;
+    return state.map[row]?.[col];
+}
+
+function applyEdit(step: TileEdit[], direction: "before" | "after") {
+    for (const change of step) {
+        const cell = cellById(change.id);
+        if (!cell) {
+            continue;
+        }
+        cell.code = change[direction];
+        cell.hexcode = cell.code + cell.color;
+        cell.modified = true;
+        if (state.last_selected?.id === cell.id) {
+            cell.displayInfo();
+        }
     }
+    Redraw();
+}
+
+function updateHistoryButtons() {
+    $("#action_undo").toggleClass("ui-state-disabled", undoStep === null);
+    $("#action_redo").toggleClass("ui-state-disabled", redoStep === null);
+}
+
+export function clearHistory() {
+    undoStep = null;
+    redoStep = null;
+    updateHistoryButtons();
+}
+
+function editCells(cells: Cell[], mutate: (cell: Cell) => void) {
+    const before = cells.map((cell) => ({ id: cell.id, code: cell.code }));
+    for (const cell of cells) {
+        mutate(cell);
+    }
+    const changes: TileEdit[] = [];
+    for (const snap of before) {
+        const cell = cellById(snap.id);
+        if (!cell || cell.code === snap.code) {
+            continue;
+        }
+        changes.push({ id: snap.id, before: snap.code, after: cell.code });
+    }
+    if (changes.length === 0) {
+        return;
+    }
+    undoStep = changes;
+    redoStep = null;
+    updateHistoryButtons();
+}
+
+function undoEdit() {
+    if (!undoStep) {
+        return;
+    }
+    applyEdit(undoStep, "before");
+    redoStep = undoStep;
+    undoStep = null;
+    updateHistoryButtons();
+}
+
+function redoEdit() {
+    if (!redoStep) {
+        return;
+    }
+    applyEdit(redoStep, "after");
+    undoStep = redoStep;
+    redoStep = null;
+    updateHistoryButtons();
 }
 
 export function replaceSelectedCells() {
-    $.each(state.selected_cells, function (id, cell) {
-        cell.updateCode(overwrite_code);
-    });
+    editCells(Object.values(state.selected_cells), (cell) => cell.updateCode(overwrite_code));
     Redraw();
 }
 
@@ -166,7 +455,11 @@ export function SelectAction(target: HTMLElement) {
         return;
     }
     const action = $(target).attr("id");
-    if (action == "action_replace") {
+    if (action == "action_undo") {
+        undoEdit();
+    } else if (action == "action_redo") {
+        redoEdit();
+    } else if (action == "action_replace") {
         replaceSelectedCells();
     } else if (action == "action_copy") {
         if (state.current_action == "action_copy") {
@@ -180,7 +473,8 @@ export function SelectAction(target: HTMLElement) {
             Redraw();
         }
     } else if (action == "action_paste") {
-        $.each(state.paste_cells, function (id, cell) {
+        const pasted = Object.values(state.paste_cells);
+        editCells(pasted, (cell) => {
             if (cell.paste_code) {
                 cell.updateCode(cell.paste_code);
                 cell.paste_code = "";
@@ -191,9 +485,7 @@ export function SelectAction(target: HTMLElement) {
         Redraw();
         state.current_action = undefined;
     } else if (action == "action_clear") {
-        $.each(state.selected_cells, function (id, cell) {
-            cell.clear();
-        });
+        editCells(Object.values(state.selected_cells), (cell) => cell.clear());
         Redraw();
     }
     CheckActionState();
@@ -235,6 +527,17 @@ export function KeypressHandler(type: string, key: number) {
     }
 
     if (globals.keys.control) {
+        const typing =
+            document.activeElement instanceof HTMLInputElement ||
+            document.activeElement instanceof HTMLTextAreaElement;
+        if (!typing && (key == 90 || key == 89)) {
+            if (key == 89 || globals.keys.shift) {
+                redoEdit();
+            } else {
+                undoEdit();
+            }
+            return;
+        }
         if (key == 67) {
             //C
             $("#action_copy").click();

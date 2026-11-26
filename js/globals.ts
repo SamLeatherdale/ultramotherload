@@ -58,7 +58,7 @@ export const MATERIAL_CATEGORIES = {
         "67": "Hip Bones",
         "68": "Leg Bones",
         "69": "Hammer",
-        "6A": "Scrap Metal (Sickle)",
+        "6A": "Scrap Metal",
         "6B": "Broken Beacon",
     },
     "Pickups & Bombs": {
@@ -86,8 +86,8 @@ export const MATERIAL_CATEGORIES = {
     },
     Experimental: {
         "12": "Dirt (edge B)",
-        "25": "Speed Boost (unused)",
-        "2A": "Blueprints (unused)",
+        "25": "Speed Boost",
+        "2A": "Blueprints",
         FD: "Out of Bounds",
     },
 } as const;
@@ -118,6 +118,46 @@ export const SECRET_SKY_SHOP = {
     startCol: 34,
     endCol: 36,
 } as const;
+
+export type MapSection = {
+    id: string;
+    label: string;
+    startRow: number;
+    endRow: number;
+    color: string;
+};
+
+/** Accents sampled from each facility image. The sky band is black. */
+const SECTION_COLOR: Record<string, string> = {
+    Top: "#000000",
+    Surface: "#d55244",
+    Alpha: "#bf7d12",
+    Beta: "#50ae81",
+    Gamma: "#7a9a32",
+    Delta: "#1aa3b8",
+    Boss: "#f21b21",
+};
+
+export function mapSections(): MapSection[] {
+    const landmarks: { id: string; label: string; startRow: number }[] = [
+        { id: "Top", label: "Top", startRow: 0 },
+    ];
+    const named = OUTPOSTS.filter((outpost) => outpost.name !== "").sort(
+        (a, b) => a.start_row - b.start_row,
+    );
+    for (const outpost of named) {
+        const id = outpost.name === "BossRoom" ? "Boss" : outpost.name;
+        landmarks.push({ id, label: id, startRow: outpost.start_row });
+    }
+    return landmarks.map((landmark, index) => {
+        const next = landmarks[index + 1];
+        return {
+            ...landmark,
+            endRow: next ? next.startRow - 1 : MAP_ROWS - 1,
+            color: SECTION_COLOR[landmark.id] ?? "#888888",
+        };
+    });
+}
 
 export var OUTPOSTS = [
     new Outpost(

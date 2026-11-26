@@ -90,7 +90,7 @@ export class Cell implements CellLike {
         //Outer FD perimeter (cols 0/37, row 0) is always locked; interior FD/FE/outposts unlock when Safe Mode is off
     }
 
-    click() {
+    click(gesture: "toggle" | "replace" = "replace") {
         if (state.current_action == "action_copy") {
             state.paste_cells = {};
 
@@ -106,40 +106,35 @@ export class Cell implements CellLike {
                     state.paste_cells[pcell.id] = pcell;
                 }
             });
-        } else {
-            if (globals.keys.shift && !!state.last_selected) {
-                var cellB = state.last_selected;
-                //cellB.select(); //Flip original first, so it matches the other tiles
-                var startRow = this.row < cellB.row ? this.row : cellB.row;
-                var startCol = this.col < cellB.col ? this.col : cellB.col;
-                var endRow = this.row > cellB.row ? this.row : cellB.row;
-                var endCol = this.col > cellB.col ? this.col : cellB.col;
-                for (var row = startRow; row <= endRow; row++) {
-                    for (var col = startCol; col <= endCol; col++) {
-                        state.map[row][col].select(false, true);
-                    }
+        } else if (globals.keys.shift && !!state.last_selected) {
+            var cellB = state.last_selected;
+            var startRow = this.row < cellB.row ? this.row : cellB.row;
+            var startCol = this.col < cellB.col ? this.col : cellB.col;
+            var endRow = this.row > cellB.row ? this.row : cellB.row;
+            var endCol = this.col > cellB.col ? this.col : cellB.col;
+            for (var row = startRow; row <= endRow; row++) {
+                for (var col = startCol; col <= endCol; col++) {
+                    state.map[row][col].select(false, true);
                 }
-                this.select(true, true); //Ensures that the target is last_selected as opposed to endRol, endCol
-            } else if (globals.keys.control) {
-                this.select();
-            } else {
-                state.selected_cells = {};
-                this.select();
             }
+            this.select(true, true); //Ensures that the target is last_selected as opposed to endRol, endCol
+            if (state.selected_tool === "tool_overwrite") {
+                replaceSelectedCells();
+            }
+        } else if (gesture === "toggle") {
+            this.select();
+            if (state.selected_tool === "tool_overwrite") {
+                replaceSelectedCells();
+            }
+        } else {
+            state.selected_cells = {};
+            this.select();
             if (state.selected_tool === "tool_overwrite") {
                 replaceSelectedCells();
             }
         }
 
-        //Update cell counts
-        var selection_count = Object.keys(state.selected_cells).length;
-        if (selection_count > 0) {
-            var corners = findCorners(state.selected_cells);
-            $("#info_selection_width").text(corners.endCol - corners.startCol + 1);
-            $("#info_selection_height").text(corners.endRow - corners.startRow + 1);
-        }
-        $("#info_selection_total").text(selection_count);
-
+        refreshSelectionInfo();
         CheckActionState();
         Redraw();
     }
@@ -190,6 +185,57 @@ export class Cell implements CellLike {
     isPasting() {
         return typeof state.paste_cells[this.id] != "undefined";
     }
+}
+
+export function refreshSelectionInfo() {
+    const selectionCount = Object.keys(state.selected_cells).length;
+    if (selectionCount > 0) {
+        const corners = findCorners(state.selected_cells);
+        $("#info_selection_width").text(corners.endCol - corners.startCol + 1);
+        $("#info_selection_height").text(corners.endRow - corners.startRow + 1);
+    } else {
+        $("#info_selection_width").text(0);
+        $("#info_selection_height").text(0);
+    }
+    $("#info_selection_total").text(selectionCount);
+}
+
+/** Replace the current selection with every tile in the inclusive rectangle. */
+export function replaceSelectionWithRectangle(
+    rowA: number,
+    colA: number,
+    rowB: number,
+    colB: number,
+) {
+    const startRow = Math.min(rowA, rowB);
+    const endRow = Math.max(rowA, rowB);
+    const startCol = Math.min(colA, colB);
+    const endCol = Math.max(colA, colB);
+    const next: { [key: number]: Cell } = {};
+    for (let row = startRow; row <= endRow; row++) {
+        const line = state.map[row];
+        if (!line) {
+            continue;
+        }
+        for (let col = startCol; col <= endCol; col++) {
+            const cell = line[col];
+            if (cell) {
+                next[cell.id] = cell;
+            }
+        }
+    }
+    state.selected_cells = next;
+    const last = state.map[rowB]?.[colB];
+    if (last) {
+        state.last_selected = last;
+        last.displayInfo();
+    }
+    refreshSelectionInfo();
+    if (state.selected_tool === "tool_overwrite") {
+        replaceSelectedCells();
+    }
+    CheckActionState();
+    Redraw();
 }
 const backgrounds: { [key: string]: string } = {
     "00": "Red",

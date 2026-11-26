@@ -1,12 +1,13 @@
 import $ from "jquery";
 import sampleMapUrl from "../res/sample_map.bin?url";
-import { CanvasClick, ZoomUpdate } from "./canvas";
+import { BindMapPointer, ZoomUpdate } from "./canvas";
 import { Cell } from "./cell";
 import * as globals from "./globals";
 import { state } from "./globals";
 import { Setup } from "./setup";
 import {
     ClearLoadWarning,
+    clearHistory,
     CreateScrollbar,
     ScrollbarOnScroll,
     ScrollButtonOnClick,
@@ -235,6 +236,7 @@ function ParseFile(file: ArrayBuffer): boolean {
 
     file_header = parsed.header;
     state.map = parsed.map;
+    clearHistory();
 
     //Initialize some stuff
     state.total_rows = state.map.length;
@@ -257,8 +259,10 @@ function ParseFile(file: ArrayBuffer): boolean {
     $("#map").css({ display: "inline-block" }); //Show the canvas
 
     $("#map_scrollbar, #map").mousewheel(ScrollbarOnScroll);
-    $("#map_scrollcontrols button").click((e) => ScrollButtonOnClick(e.target));
-    $("#map").click(CanvasClick);
+    $("#map_scrollcontrols > button").on("click", function () {
+        ScrollButtonOnClick(this);
+    });
+    BindMapPointer();
     $("#input_current_row").change(function (event) {
         UpdateCurrentRow(parseInt($(event.target).val() as string));
     });
