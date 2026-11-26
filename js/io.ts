@@ -16,7 +16,13 @@ import {
 import { imageAssets } from "./images";
 
 const MAP_HEADER_SIZE = 48;
+const MAP_FILE_MAGIC = [0x01, 0x58, 0x47, 0x53, 0x4d, 0x4c, 0x5f, 0xff] as const;
+const MAP_FILE_VERSION = 0;
+const MAP_CHUNK_COUNT = 1;
 const MAP_FILE_TYPE = 2;
+const MAP_CHUNK_VERSION = 0;
+const MAP_PAYLOAD_SIZE = globals.MAP_ROWS * globals.COLS_PER_ROW * 2; // 0x1BDE8 = 114,152 bytes
+const MAP_TOTAL_SIZE = MAP_HEADER_SIZE + MAP_PAYLOAD_SIZE; // 0x1BE18 = 114,200 bytes
 const SAVE_TYPE_NAMES: Record<number, string> = {
     0: "progress",
     1: "characters",
@@ -83,16 +89,21 @@ export function parseMapBuffer(file: ArrayBuffer): {
     const header = array.slice(0, MAP_HEADER_SIZE); //First 48 bytes are the header
     const rawMap = array.slice(MAP_HEADER_SIZE); //Now read the rest of the file
 
-    //Check this is a valid file
-    let verification = "";
-    for (let i = 1; i < 6; i++) {
-        verification += String.fromCharCode(header[i]);
-    }
-    if (verification != "XGSML") {
-        throw new Error("This is not a valid Super Motherload Map file");
+    //Check full 8-byte XGSML file signature (\x01XGSML_\xff)
+    for (let i = 0; i < MAP_FILE_MAGIC.length; i++) {
+        if (header[i] !== MAP_FILE_MAGIC[i]) {
+            throw new Error("This is not a valid Super Motherload Map file");
+        }
     }
 
     const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+    const fileVersion = view.getUint32(8, true);
+    if (fileVersion !== MAP_FILE_VERSION) {
+        throw new Error(
+            `This is not a valid Super Motherload Map file (unsupported file version ${fileVersion})`,
+        );
+    }
+
     const fileType = view.getUint32(32, true);
     if (fileType !== MAP_FILE_TYPE) {
         const known = SAVE_TYPE_NAMES[fileType];
@@ -104,18 +115,24 @@ export function parseMapBuffer(file: ArrayBuffer): {
         );
     }
 
-    const declaredTotalSize = view.getUint32(12, true);
+    const chunkCount = view.getUint32(20, true);
+    const chunkVersion = view.getUint32(36, true);
+    if (chunkCount !== MAP_CHUNK_COUNT || chunkVersion !== MAP_CHUNK_VERSION) {
+        throw new Error("This is not a valid Super Motherload Map file (unsupported chunk header)");
+    }
+
+    const declaredTotalSizeLo = view.getUint32(12, true);
+    const declaredTotalSizeHi = view.getUint32(16, true);
     const declaredPayloadSize = view.getUint32(40, true);
-    if (declaredTotalSize !== file.byteLength || declaredPayloadSize !== rawMap.length) {
+    if (
+        declaredTotalSizeHi !== 0 ||
+        declaredTotalSizeLo !== file.byteLength ||
+        declaredPayloadSize !== rawMap.length
+    ) {
         throw new Error("This is not a valid Super Motherload Map file (header size mismatch)");
     }
 
-    const rowBytes = globals.COLS_PER_ROW * 2;
-    if (
-        rawMap.length === 0 ||
-        rawMap.length % rowBytes !== 0 ||
-        rawMap.length / rowBytes <= globals.ROWS_ABOVE_SURFACE
-    ) {
+    if (rawMap.length !== MAP_PAYLOAD_SIZE) {
         throw new Error("This is not a valid Super Motherload Map file (invalid map dimensions)");
     }
 
@@ -143,7 +160,14 @@ export function serializeMapBuffer(
     header: Uint8Array<ArrayBuffer>,
     map: Cell[][],
 ): Uint8Array<ArrayBuffer> {
-    const data = new Uint8Array(header.length + map.length * globals.COLS_PER_ROW * 2);
+    if (header.length !== MAP_HEADER_SIZE) {
+        throw new Error("Invalid map header length");
+    }
+    if (map.length !== globals.MAP_ROWS || map.some((row) => row.length !== globals.COLS_PER_ROW)) {
+        throw new Error("Invalid map dimensions for export");
+    }
+
+    const data = new Uint8Array(MAP_TOTAL_SIZE);
     data.set(header, 0);
     for (let row = 0; row < map.length; row++) {
         for (let col = 0; col < globals.COLS_PER_ROW; col++) {
@@ -165,7 +189,7 @@ export function SaveFile() {
         if (existingUrl) {
             URL.revokeObjectURL(existingUrl);
         }
-        var blob = new Blob([output]);
+        var blob = new Blob([output], { type: "application/octet-stream" });
         var url = URL.createObjectURL(blob);
         $("#output_map").attr("href", url);
         $("#output_map")[0].click(); //Trigger underlying
@@ -182,7 +206,7 @@ export function LoadDefaultMap() {
     oReq.open("GET", sampleMapUrl, true);
     oReq.responseType = "arraybuffer";
 
-    oReq.onload = function (oEvent) {
+    oReq.onload = function () {
         if (this.readyState == 4 && this.status == 200) {
             var arrayBuffer = oReq.response; // Note: not oReq.responseText
             if (arrayBuffer) {

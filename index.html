@@ -1,282 +1,528 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Ultra Motherload - Super Motherload Map Editor</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <head>
+        <meta charset="utf-8" />
+        <title>Ultra Motherload - Super Motherload Map Editor</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-    <script src="js/index.ts" type="module"></script>
-    <link rel="stylesheet" href="css/style.css"/>
-    <link rel="icon" href="/SMLME-256.jpg">
-</head>
-<body>
-<div id="content_wrap">
-    <header id="header">
-        <div id="title_row">
-            <svg version="1.1" id="header_logo" xmlns="http://www.w3.org/2000/svg"
-                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                 width="62.063px" height="44.372px" viewBox="0 0 62.063 44.372"
-                 enable-background="new 0 0 62.063 44.372" xml:space="preserve" fill="#3FFFAD" stroke="#00C984">
-                <polygon id="Section_4" stroke-miterlimit="10" points="0.925,0.5 61.092,0.5 49.635,16.558
-            	7.646,10.767 "/>
-                <polygon id="Section_3" stroke-miterlimit="10" points="10.439,14.054 48.258,18.834 43.722,25.5
-            	15.183,21.521 "/>
-                <polygon id="Section_2" stroke-miterlimit="10" points="17.592,24.667 41.758,28 38.258,33.5
-            	22.39,31.806 "/>
-                <polygon id="Section_1" stroke-miterlimit="10" points="25.093,35.099 35.758,36.667 31.008,43.5
-            	"/>
-            </svg>
-            <h1 id="title">Ultra Motherload</h1>
-        </div>
-        <div id="input_file_row">
-            <div class="form-group">
-                <label class="custom-file">
-                    <input type="file" id="map_file" style="display: none;">
-                    <div class="input-group" id="map_filename_group">
-                        <span class="btn btn-primary input-group-addon">Load map...</span>
-                        <span class="form-control" id="map_filename"></span>
-                    </div>
-                </label>
-
-                <button id="save_map" class="btn btn-success">Save map</button>
-                <a id="output_map" download="map" href="">Download edited map</a>
-            </div>
-            <div id="load_error" class="alert alert-danger alert-dismissible" role="alert">
-                <span id="load_error_message"></span>
-                <button type="button" class="close" id="load_error_close" aria-label="Dismiss">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        </div>
-
-        <div id="map_editcontrols">
-            <div class="controls-section">
-                <button class="ui-button ui-widget ui-corner-all button-tool" id="tool_select">
-                    <i class="fa fa-mouse-pointer"></i><span>Select</span>
-                </button>
-                <button class="ui-button ui-widget ui-corner-all button-tool" id="tool_overwrite">
-                    <i class="fa fa-hand-pointer-o"></i><span>Overwrite</span>
-                </button>
-            </div>
-
-            <div class="controls-section">
-                <button class="ui-button ui-widget ui-corner-all button-action ui-state-disabled" id="action_replace">
-                    <i class="fa fa-pencil"></i><span>Replace</span>
-                </button>
-                <button class="ui-button ui-widget ui-corner-all button-action ui-state-disabled" id="action_clear">
-                    <i class="fa fa-trash"></i><span>Clear</span>
-                </button>
-                <button class="ui-button ui-widget ui-corner-all button-action ui-state-disabled" id="action_copy">
-                    <i class="fa fa-copy"></i><span>Copy</span>
-                </button>
-                <button class="ui-button ui-widget ui-corner-all button-action ui-state-disabled" id="action_paste">
-                    <i class="fa fa-paste"></i><span>Paste</span>
-                </button>
-            </div>
-
-            <div class="controls-section">
-                <label for="map_zoom"><i class="fa fa-search"></i></label>
-                <select id="map_zoom">
-                    <option value="0.75">75%</option>
-                    <option value="0.85">85%</option>
-                    <option value="1" selected>100%</option>
-                    <option value="1.25">125%</option>
-                    <option value="1.5">150%</option>
-                </select>
-            </div>
-
-            <div class="controls-section">
-                <button class="ui-button ui-widget ui-corner-all" data-toggle="modal" data-target="#help_modal"
-                        id="button_help">
-                    <i class="fa fa-question-circle"></i><span>Help</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main>
-        <div id="load_splash">
-            <div id="load_splash_container">
-                <div id="load_splash_content">
-                    <i id="load_splash_icon" class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
-                    <i id="load_splash_warning" class="fa fa-3x fa-exclamation-triangle"></i>
-                    <h1 id="load_splash_message">Loading assets...</h1>
+        <script src="js/index.ts" type="module"></script>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" href="/SMLME-256.jpg" />
+    </head>
+    <body>
+        <div id="content_wrap">
+            <header id="header">
+                <div id="title_row">
+                    <svg
+                        version="1.1"
+                        id="header_logo"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        x="0px"
+                        y="0px"
+                        width="62.063px"
+                        height="44.372px"
+                        viewBox="0 0 62.063 44.372"
+                        enable-background="new 0 0 62.063 44.372"
+                        xml:space="preserve"
+                        fill="#3FFFAD"
+                        stroke="#00C984"
+                    >
+                        <polygon
+                            id="Section_4"
+                            stroke-miterlimit="10"
+                            points="0.925,0.5 61.092,0.5 49.635,16.558
+            	7.646,10.767 "
+                        />
+                        <polygon
+                            id="Section_3"
+                            stroke-miterlimit="10"
+                            points="10.439,14.054 48.258,18.834 43.722,25.5
+            	15.183,21.521 "
+                        />
+                        <polygon
+                            id="Section_2"
+                            stroke-miterlimit="10"
+                            points="17.592,24.667 41.758,28 38.258,33.5
+            	22.39,31.806 "
+                        />
+                        <polygon
+                            id="Section_1"
+                            stroke-miterlimit="10"
+                            points="25.093,35.099 35.758,36.667 31.008,43.5
+            	"
+                        />
+                    </svg>
+                    <h1 id="title">Ultra Motherload</h1>
                 </div>
-            </div>
-        </div>
-        <canvas width="1080" height="600" id="map"></canvas>
+                <div id="input_file_row">
+                    <div class="form-group">
+                        <label class="custom-file">
+                            <input type="file" id="map_file" style="display: none" />
+                            <div class="input-group" id="map_filename_group">
+                                <span class="btn btn-primary input-group-addon">Load map...</span>
+                                <span class="form-control" id="map_filename"></span>
+                            </div>
+                        </label>
 
-        <div id="map_scrollcontrols">
-            <button class="ui-button ui-widget ui-corner-all" id="map_upmany">
-                <i class="fa fa-angle-double-up"></i>
-            </button>
-            <button class="ui-button ui-widget ui-corner-all" id="map_upone">
-                <i class="fa fa-angle-up"></i>
-            </button>
-            <div id="map_scrollbar">
-                <div class="ui-slider-handle"></div>
-            </div>
-            <button class="ui-button ui-widget ui-corner-all" id="map_downone">
-                <i class="fa fa-angle-down"></i>
-            </button>
-            <button class="ui-button ui-widget ui-corner-all" id="map_downmany">
-                <i class="fa fa-angle-double-down"></i>
-            </button>
-        </div>
-
-        <div id="map_infoboxes">
-            <div id="cell_infobox" class="controls-section card">
-                <div class="card-header">
-                    <div>Last Selected Tile</div>
-                </div>
-                <div class="card-body">
-                    <div>
-                        <span class="cell-info-title">Row: </span><span id="info_cell_row"></span>
+                        <button id="save_map" class="btn btn-success">Save map</button>
+                        <a id="output_map" download="map" href="">Download edited map</a>
                     </div>
-                    <div>
-                        <span class="cell-info-title">Column: </span><span id="info_cell_column"></span>
-                    </div>
-                    <div>
-                        <span class="cell-info-title">Hexcode: </span><span id="info_cell_hexcode"></span>
-                    </div>
-                    <div>
-                        <span class="cell-info-title">Material: </span><span id="info_cell_material"></span>
-                    </div>
-                    <div>
-                        <span class="cell-info-title">Color: </span><span id="info_cell_color"></span>
-                    </div>
-                    <div>
-                        <span class="cell-info-title">Locked: </span><span id="info_cell_locked"></span>
+                    <div id="load_error" class="alert alert-danger alert-dismissible" role="alert">
+                        <span id="load_error_message"></span>
+                        <button
+                            type="button"
+                            class="close"
+                            id="load_error_close"
+                            aria-label="Dismiss"
+                        >
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <div id="selection_infobox" class="controls-section card">
-                <div class="card-header">
-                    <div>Selection Info</div>
-                </div>
-                <div class="card-body">
-                    <div>
-                        <span class="cell-info-title">Width: </span><span id="info_selection_width">0</span>
+                <div id="map_editcontrols">
+                    <div class="controls-section">
+                        <button
+                            class="ui-button ui-widget ui-corner-all button-tool"
+                            id="tool_select"
+                        >
+                            <i class="fa fa-mouse-pointer"></i><span>Select</span>
+                        </button>
+                        <button
+                            class="ui-button ui-widget ui-corner-all button-tool"
+                            id="tool_overwrite"
+                        >
+                            <i class="fa fa-hand-pointer-o"></i><span>Overwrite</span>
+                        </button>
                     </div>
-                    <div>
-                        <span class="cell-info-title">Height: </span><span id="info_selection_height">0</span>
-                    </div>
-                    <div>
-                        <span class="cell-info-title">Total Cells: </span><span id="info_selection_total">0</span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="controls-section card" id="position_infobox">
-                <div class="card-header">
-                    <div>Position</div>
-                </div>
-                <div class="card-body">
-                    <div class="input-row">
-                        <label class="position-info-title" for="input_current_row">Row:</label>
-                        <input type="number" class="form-control" name="input_current_row" id="input_current_row">
-                        <span id="max_rows"></span>
+                    <div class="controls-section">
+                        <button
+                            class="ui-button ui-widget ui-corner-all button-action ui-state-disabled"
+                            id="action_replace"
+                        >
+                            <i class="fa fa-pencil"></i><span>Replace</span>
+                        </button>
+                        <button
+                            class="ui-button ui-widget ui-corner-all button-action ui-state-disabled"
+                            id="action_clear"
+                        >
+                            <i class="fa fa-trash"></i><span>Clear</span>
+                        </button>
+                        <button
+                            class="ui-button ui-widget ui-corner-all button-action ui-state-disabled"
+                            id="action_copy"
+                        >
+                            <i class="fa fa-copy"></i><span>Copy</span>
+                        </button>
+                        <button
+                            class="ui-button ui-widget ui-corner-all button-action ui-state-disabled"
+                            id="action_paste"
+                        >
+                            <i class="fa fa-paste"></i><span>Paste</span>
+                        </button>
                     </div>
-                    <div class="input-row">
-                        <label class="position-info-title" for="input_current_depth">Depth: </label>
-                        <input type="number" class="form-control" id="input_current_depth" step="12.5"/>
-                        <span class="input-group-addon" id="basic-addon1"> ft</span>
+
+                    <div class="controls-section">
+                        <label for="map_zoom"><i class="fa fa-search"></i></label>
+                        <select id="map_zoom">
+                            <option value="0.5">50%</option>
+                            <option value="0.8">80%</option>
+                            <option value="1" selected>100%</option>
+                            <option value="1.2">120%</option>
+                            <option value="1.5">150%</option>
+                            <option value="2">200%</option>
+                        </select>
+                    </div>
+
+                    <div class="controls-section">
+                        <button
+                            class="ui-button ui-widget ui-corner-all"
+                            data-toggle="modal"
+                            data-target="#help_modal"
+                            id="button_help"
+                        >
+                            <i class="fa fa-question-circle"></i><span>Help</span>
+                        </button>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div id="map_materials" class="controls-section">
-                <h4>Current Material:</h4>
-                <a tabindex="10" id="current_material_container" class="inherit-link"></a>
-
-                <div id="map_materials_panel" class="clearfix input-group">
-                    <div class="card-header">Select a material</div>
-                    <div id="map_materials_container" class="clearfix">
-                        <div class="material-container ui-button clearfix" data-code="">
-                            <div class="material-icon"></div>
-                            <div class="material-title"></div>
+            <main>
+                <div id="load_splash">
+                    <div id="load_splash_container">
+                        <div id="load_splash_content">
+                            <i id="load_splash_icon" class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
+                            <i
+                                id="load_splash_warning"
+                                class="fa fa-3x fa-exclamation-triangle"
+                            ></i>
+                            <h1 id="load_splash_message">Loading assets...</h1>
                         </div>
                     </div>
                 </div>
+                <canvas width="1080" height="600" id="map"></canvas>
 
+                <div id="map_scrollcontrols">
+                    <button class="ui-button ui-widget ui-corner-all" id="map_upmany">
+                        <i class="fa fa-angle-double-up"></i>
+                    </button>
+                    <button class="ui-button ui-widget ui-corner-all" id="map_upone">
+                        <i class="fa fa-angle-up"></i>
+                    </button>
+                    <div id="map_scrollbar">
+                        <div class="ui-slider-handle"></div>
+                    </div>
+                    <button class="ui-button ui-widget ui-corner-all" id="map_downone">
+                        <i class="fa fa-angle-down"></i>
+                    </button>
+                    <button class="ui-button ui-widget ui-corner-all" id="map_downmany">
+                        <i class="fa fa-angle-double-down"></i>
+                    </button>
+                </div>
 
-                <label for="input_safemode">Safe Mode:</label>
-                <input type="checkbox" name="input_safemode" id="input_safemode" checked/>
-                <i class="fa fa-question-circle" id="help_safemode"></i>
-            </div>
+                <div id="map_infoboxes">
+                    <div id="cell_infobox" class="controls-section card">
+                        <div class="card-header">
+                            <div>Last Selected Tile</div>
+                        </div>
+                        <div class="card-body">
+                            <div>
+                                <span class="cell-info-title">Row: </span
+                                ><span id="info_cell_row"></span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Column: </span
+                                ><span id="info_cell_column"></span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Hexcode: </span
+                                ><span id="info_cell_hexcode"></span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Material: </span
+                                ><span id="info_cell_material"></span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Color: </span
+                                ><span id="info_cell_color"></span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Locked: </span
+                                ><span id="info_cell_locked"></span>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="controls-section">
+                    <div id="selection_infobox" class="controls-section card">
+                        <div class="card-header">
+                            <div>Selection Info</div>
+                        </div>
+                        <div class="card-body">
+                            <div>
+                                <span class="cell-info-title">Width: </span
+                                ><span id="info_selection_width">0</span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Height: </span
+                                ><span id="info_selection_height">0</span>
+                            </div>
+                            <div>
+                                <span class="cell-info-title">Total Cells: </span
+                                ><span id="info_selection_total">0</span>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="controls-section card" id="position_infobox">
+                        <div class="card-header">
+                            <div>Position</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-row">
+                                <label class="position-info-title" for="input_current_row"
+                                    >Row:</label
+                                >
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    name="input_current_row"
+                                    id="input_current_row"
+                                />
+                                <span id="max_rows"></span>
+                            </div>
+                            <div class="input-row">
+                                <label class="position-info-title" for="input_current_depth"
+                                    >Depth:
+                                </label>
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="input_current_depth"
+                                    step="12.5"
+                                />
+                                <span class="input-group-addon" id="basic-addon1"> ft</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="map_materials" class="controls-section">
+                        <h4>Current Material:</h4>
+                        <a tabindex="10" id="current_material_container" class="inherit-link"></a>
+
+                        <div id="map_materials_panel" class="clearfix input-group">
+                            <div class="card-header">Select a material</div>
+                            <div id="map_materials_container" class="clearfix">
+                                <div class="material-container ui-button clearfix" data-code="">
+                                    <div class="material-icon"></div>
+                                    <div class="material-title"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="safemode_row">
+                            <button
+                                type="button"
+                                id="button_safemode"
+                                class="btn btn-success btn-sm"
+                                aria-pressed="true"
+                            >
+                                <i class="fa fa-lock"></i><span>Safe Mode: On</span>
+                            </button>
+                            <button
+                                type="button"
+                                id="help_safemode"
+                                class="btn btn-link p-0"
+                                data-toggle="modal"
+                                data-target="#safemode_modal"
+                                aria-label="What is Safe Mode?"
+                            >
+                                <i class="fa fa-question-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="controls-section"></div>
+                </div>
+            </main>
+        </div>
+        <footer id="footer" class="bg-dark text-light">
+            <p>
+                The web app Ultra Motherload is created by
+                <a href="https://samleatherdale.com" target="_blank">Sam Leatherdale.</a> View the
+                source
+                <a href="https://github.com/samleatherdale/ultramotherload" target="_blank"
+                    >here.</a
+                >
+            </p>
+            <p>
+                The game Super Motherload is created by
+                <a href="http://www.xgenstudios.com/" target="_blank">XGen Studios.</a> All game
+                artworks and assets belong to them.
+            </p>
+        </footer>
+
+        <!--Help-->
+        <div class="modal fade" id="help_modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Ultra Motherload Help</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            Welcome to Ultra Motherload. Ultra Motherload is a map editor for the
+                            game Super Motherload, published by XGen Studios. It allows you to view
+                            and edit the contents of your map files, and make any changes quickly
+                            and simply. You could create some cool patterns with the materials, give
+                            yourself a bit of a boost, or even create a maze or some other kind of
+                            challenge!
+                        </p>
+                        <h5>Where are the map files stored?</h5>
+                        <p>
+                            The map files are stored in your user account's AppData folder:
+                            <br /><code
+                                >%AppData%\XGen Studios, Inc\Super
+                                Motherload\savedata\worldXX\map</code
+                            >
+                        </p>
+                        <p>
+                            The map file has no extension, so when you're saving your changes, make
+                            sure the file is just called <code>map</code>. Even though the map file
+                            is edited locally, not uploaded, due to JavaScript sandboxing
+                            restrictions, the file will be "downloaded" when it is saved.
+                        </p>
+                        <p>
+                            This means you may get a popup, or it may just save automatically in
+                            your downloads folder. Most browsers will also append a
+                            <code>(1)</code> to the end of the filename if it already exists, so
+                            remove this if you want to replace the original. The map file must be
+                            saved with the same name and in the same location as the original if you
+                            want to see your changes in-game, so it's recommended to keep a backup
+                            copy just in case.
+                        </p>
+                        <h5>
+                            How does the game order worlds, and why might a save disappear or show
+                            as CORRUPT?
+                        </h5>
+                        <p>
+                            Super Motherload discovers worlds by scanning for entries named
+                            <code>savedata\world??</code>—there is no separate manifest file. There
+                            are a few gotchas you might run into:
+                        </p>
+                        <ul>
+                            <li>
+                                <strong
+                                    >Dates and slot order come from the
+                                    <code>worldXX</code> folder's Date Modified timestamp</strong
+                                >
+                                (newest first), not the folder number and not the
+                                <code>map</code> or <code>progress</code> file timestamps.
+                                <ul>
+                                    <li>
+                                        Replacing a <code>map</code> file in place does not update
+                                        the parent <code>worldXX</code> folder's modified timestamp
+                                        on Windows, so the world's displayed date and slot order
+                                        in-game will not change.
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong
+                                    >Don't place loose backup files named
+                                    <code>worldXX</code> directly in <code>savedata</code>.</strong
+                                >
+                                <ul>
+                                    <li>
+                                        The game's <code>world??</code> scan does not check whether
+                                        a match is a folder, so a file named e.g.
+                                        <code>world04</code> triggers a
+                                        <em
+                                            >"Load World Save Data — An unknown I/O error
+                                            occurred."</em
+                                        >
+                                        popup and appears as a <code>CORRUPT</code> slot.
+                                    </li>
+                                    <li>
+                                        Always give backups an extension (such as <code>.bak</code>)
+                                        or keep them outside <code>savedata</code> (note that Steam
+                                        Cloud syncs everything inside <code>savedata</code>).
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Identical folder timestamps hide worlds.</strong>
+                                <ul>
+                                    <li>
+                                        The game sorts discovered worlds in a set keyed solely by
+                                        the folder's modified timestamp, so if two
+                                        <code>worldXX</code> folders share the exact same timestamp
+                                        (for example after a Steam Cloud sync or a
+                                        timestamp-preserving backup restore), the duplicates are
+                                        silently hidden until their folder timestamps differ.
+                                    </li>
+                                    <li>
+                                        Simply renaming a folder does <strong>not</strong> update
+                                        its own Date Modified timestamp—instead, create and delete a
+                                        temporary file inside the hidden <code>worldXX</code> folder
+                                        (or change its timestamp via PowerShell /
+                                        <code>touch</code>).
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <h5>Why can't I see my changes in-game?</h5>
+                        <p>
+                            First of all, make sure you have saved the map file in the correct
+                            location, as explained above. If the game is running, you will need to
+                            exit to the main menu and reload the map. It is not recommended to
+                            change the map file while it is open in the game, quit to the main menu
+                            first before performing changes.
+                        </p>
+                        <h5>Why are some tiles locked? What is Safe Mode?</h5>
+                        <p>
+                            Some tiles are locked because they have special meaning within the game.
+                            Tiles that lie within outposts, the final boss room, or act as markers
+                            shouldn't be edited, as they could cause problems in the game, like the
+                            final boss fight not starting properly, or the game crashing. Disabling
+                            Safe Mode unlocks outpost and invisible barrier tiles for editing, and
+                            also reveals the <strong>Experimental</strong> section in the material
+                            picker (<code>Dirt (edge B)</code>, <code>Speed Boost</code>,
+                            <code>Blueprints</code>, and <code>Out of Bounds</code>). Use them at
+                            your own risk, as they may behave unexpectedly or corrupt your progress.
+                            You have been warned.
+                        </p>
+                        <h5>Why is there a row of invisible barriers at the top of the map?</h5>
+                        <p>
+                            You have discovered the secret sky shop! This shop allows you to buy
+                            more upgrades to your vehicle than the shops in the outposts. To access
+                            the sky shop, you must fly all the way up and to the left of the map,
+                            then drive along the invisible barrier to the far right.
+                        </p>
+                        <h5>I'm having another issue not listed here.</h5>
+                        <p>
+                            Please report any other bugs and issues through the
+                            <a
+                                href="https://github.com/samleatherdale/ultramotherload"
+                                target="_blank"
+                                >project's GitHub page</a
+                            >, or
+                            <a href="https://samleatherdale.com" target="_blank">contact me</a> via
+                            social media.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-    </main>
-
-
-</div>
-<footer id="footer" class="bg-dark text-light">
-    <p>The web app Ultra Motherload is created by <a href="https://samleatherdale.com" target="_blank">Sam
-        Leatherdale.</a> View the source <a href="https://github.com/samleatherdale/ultramotherload" target="_blank">here.</a>
-    </p>
-    <p>The game Super Motherload is created by <a href="http://www.xgenstudios.com/" target="_blank">XGen Studios.</a>
-        All game artworks and assets belong to them.</p>
-</footer>
-
-<!--Help-->
-<div class="modal fade" id="help_modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Ultra Motherload Help</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Welcome to Ultra Motherload. Ultra Motherload is a map editor for the game Super Motherload,
-                    published by XGen Studios. It allows you to view and edit the contents of your map files, and make
-                    any changes quickly and simply. You could create some cool patterns with the materials, give
-                    yourself a bit of a boost, or even create a maze or some other kind of challenge!
-                </p>
-                <h5>Where are the map files stored?</h5>
-                <p>The map files are stored in your user account's AppData folder:
-                    <br>%AppData%\XGen Studios, Inc\Super Motherload\savedata\worldxx\map
-                </p>
-                <p>Each world should be numbered based on the order they were created. The map file has no extension, so
-                    when you're saving your changes, make sure the file is just called map. Even though the map file is
-                    edited locally, not uploaded, due to JavaScript sandboxing restrictions, the file will be
-                    "downloaded" when it is saved.
-                </p>
-                <p>This means you may get a popup, or it may just save automatically in your downloads folder. Most
-                    browsers will also append a (1) to the end of the filename if it already exists, so remove this if
-                    you want to replace the original. The map file must be saved with the same name and in the same
-                    location as the original if you want to see your changes in-game, so it's recommended to keep a
-                    backup copy just in case.
-                </p>
-                <h5>Why can't I see my changes in-game?</h5>
-                <p>First of all, make sure you have saved the map file in the correct location, as explained above. If
-                    the game is running, you will need to exit to the main menu and reload the map. It is not
-                    recommended to change the map file while it is open in the game, quit to the main menu first before
-                    performing changes.</p>
-                <h5>Why are some tiles locked? What is Safe Mode?</h5>
-                <p>Some tiles are locked because they have special meaning within the game. Tiles that lie within
-                    outposts, the final boss room, or act as markers shouldn't be edited, as they could cause problems
-                    in the game, like the final boss fight not starting properly, or the game crashing. If you really
-                    want to edit these tiles, you can disable Safe Mode, but it could corrupt your game save or
-                    progress. You have been warned.
-                </p>
-                <h5>Why is there a row of invisible barriers at the top of the map?</h5>
-                <p>You have discovered the secret sky shop! This shop allows you to buy more upgrades to your vehicle
-                    than the shops in the outposts. To access the sky shop, you must fly all the way up and to the left
-                    of the map, then drive along the invisible barrier to the far right.</p>
-                <h5>I'm having another issue not listed here.</h5>
-                <p>Please report any other bugs and issues through the <a
-                        href="https://github.com/samleatherdale/ultramotherload" target="_blank">project's GitHub
-                    page</a>, or <a href="https://samleatherdale.com" target="_blank">contact me</a> via social
-                    media.</p>
+        <!--Safe Mode Help-->
+        <div
+            class="modal fade"
+            id="safemode_modal"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="safemodeModalLabel"
+        >
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="safemodeModalLabel">What is Safe Mode?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            <strong>Safe Mode (On)</strong> protects special tiles that have
+                            gameplay meaning so you don't accidentally break your world:
+                        </p>
+                        <ul>
+                            <li>
+                                Locks <strong>outpost</strong> areas, the
+                                <strong>final boss room</strong>, and
+                                <strong>invisible barriers</strong> (including the secret sky shop
+                                floor).
+                            </li>
+                            <li>Hides unused/experimental tile types from the material picker.</li>
+                        </ul>
+                        <p>
+                            <strong>Safe Mode (Off)</strong> lets you edit outposts and invisible
+                            barriers, and reveals the <strong>Experimental</strong> category in the
+                            material picker (<code>Dirt (edge B)</code>, <code>Speed Boost</code>,
+                            <code>Blueprints</code>, and interior <code>Out of Bounds</code> tiles).
+                            The outer map perimeter remains locked to keep the file playable.
+                        </p>
+                        <p class="mb-0">
+                            Editing protected tiles or placing experimental tiles can cause
+                            unexpected behaviour in Super Motherload—keep a backup copy of your
+                            <code>map</code> file before disabling Safe Mode.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-</body>
+    </body>
 </html>

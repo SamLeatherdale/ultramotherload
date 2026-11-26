@@ -202,9 +202,26 @@ main {
 }
 #map_materials_container {
     width: 390px;
+    max-height: 70vh;
+    overflow-y: auto;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px 8px;
+}
+.material-category-header {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #555555;
+    border-bottom: 1px solid #d8d8d8;
+    padding-top: 6px;
+    padding-bottom: 2px;
+
+    &:first-child {
+        padding-top: 0;
+    }
 }
 #current_material_container {
     display: block;
@@ -217,13 +234,13 @@ main {
     padding-left: 0;
     padding-top: 0;
     padding-bottom: 0;
-    margin-bottom: 8px;
+    margin-bottom: 0;
 }
 .material-icon {
     float: left;
     width: 30px;
     height: 30px;
-    background-size: cover;
+    background-repeat: no-repeat;
 }
 .material-title {
     float: left;
@@ -233,19 +250,37 @@ main {
     padding-top: 3px;
 }
 
-label[for="input_safemode"] {
-    margin-right: 5px;
-}
+#safemode_row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
 
-#input_safemode {
-    width: 16px;
-    height: 16px;
-}
+    #button_safemode {
+        flex: 1;
+        width: auto;
+        margin-bottom: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
 
-#help_safemode {
-    color: #999999;
-    margin-left: 15px;
-    font-size: 20px;
+        span {
+            margin-left: 0;
+        }
+    }
+
+    #help_safemode {
+        width: auto;
+        margin-bottom: 0;
+        color: #999999;
+        font-size: 20px;
+        line-height: 1;
+
+        &:hover {
+            color: #555555;
+        }
+    }
 }
 
 #footer {

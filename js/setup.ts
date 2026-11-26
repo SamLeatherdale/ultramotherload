@@ -10,6 +10,7 @@ import {
     SelectAction,
     SelectMaterial,
     SelectTool,
+    UpdateSafeModeUI,
 } from "./ui";
 import { state } from "./globals";
 
@@ -35,8 +36,18 @@ export function Setup() {
     });
     CheckActionState();
 
+    $("#map_materials_container .material-container").on("mousedown", (event) => {
+        // Chrome blurs the focused trigger on mousedown, and Bootstrap then
+        // hides this popover before mouseup. With prefers-reduced-motion the
+        // fade is skipped, so the click never lands and the selection stays put.
+        event.preventDefault();
+    });
     $("#map_materials_container .material-container").on("click", function () {
         SelectMaterial(this);
+        const trigger = document.getElementById("current_material_container");
+        if (trigger && document.activeElement === trigger) {
+            trigger.blur();
+        }
     });
     $("#current_material_container").popover({
         content: $("#map_materials_container"),
@@ -44,16 +55,17 @@ export function Setup() {
         title: "Select a material",
         trigger: "focus",
     });
-    $("#help_safemode").tooltip({
-        title: "Safe mode prevents certain important tiles being edited. See help for more info.",
-    });
-    $("#input_safemode").on("change", function () {
-        state.safe_mode = (this as HTMLInputElement).checked;
-        if (!!state.last_selected) {
+    UpdateSafeModeUI();
+    $("#button_safemode").on("click", function () {
+        state.safe_mode = !state.safe_mode;
+        UpdateSafeModeUI();
+        if (state.last_selected) {
             state.last_selected.displayInfo();
         }
     });
-    $(".material-container:first-child").trigger("click"); //Select first material as default
+    $("#map_materials_container .material-container:not(.experimental-material)")
+        .first()
+        .trigger("click"); //Select first safe material as default
     //$("#current_material_container").click(OpenMaterialPanel);
 
     $(document).on("keyup keydown", (e) => KeypressHandler(e.type, e.which!));

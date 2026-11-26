@@ -1,11 +1,12 @@
 //UI functions
 import $ from "jquery";
 import { throttle } from "lodash";
+import { getMaterialIconKey, getTileSpriteRect } from "./autotile";
 import { Redraw } from "./canvas";
 import * as globals from "./globals";
-import { getCell, getImage, getRandomInt } from "./helper";
-import { imageAssets } from "./images";
 import { state } from "./globals";
+import { getCell, getRandomInt } from "./helper";
+import { tileManifest, tilesSheetUrl } from "./images";
 
 export function CreateScrollbar() {
     var handle = $("#map_scrollbar .ui-slider-handle");
@@ -21,7 +22,7 @@ export function CreateScrollbar() {
         slide: function (event, ui) {
             UpdateCurrentRow(state.max_view_rows - (ui.value || 0), true);
         },
-        stop: function (event, ui) {},
+        stop: function () {},
     });
 }
 
@@ -73,17 +74,65 @@ export function UpdateCurrentRow(newvalue: number, debounce?: boolean) {
     }
 }
 
+let materialsContainer: JQuery<HTMLElement>;
+
 export function CreateMaterialsPanel() {
-    Object.entries(globals.materials).forEach(([code, name]) => {
-        const m = $(".material-container:first-child").clone();
-        m.attr("data-code", code);
-        m.find(".material-icon").css({
-            backgroundImage: `url(${imageAssets[getImage(code, code + "00")]})`,
-        });
-        m.find(".material-title").text(name);
-        $("#map_materials_container").append(m);
-    });
-    $(".material-container:first-child").remove(); //Remove template material
+    materialsContainer = $("#map_materials_container");
+    const template = materialsContainer.find(".material-container:first-child").detach();
+
+    for (const [categoryName, categoryMaterials] of Object.entries(globals.MATERIAL_CATEGORIES)) {
+        const isExperimental = categoryName === "Experimental";
+        const heading = $('<div class="material-category-header"></div>').text(categoryName);
+        if (isExperimental) {
+            heading.addClass("experimental-material");
+        }
+        materialsContainer.append(heading);
+
+        for (const [code, name] of Object.entries(categoryMaterials)) {
+            const m = template.clone();
+            m.attr("data-code", code);
+            if (isExperimental) {
+                m.addClass("experimental-material");
+            }
+            const iconSize = 30;
+            const rect = getTileSpriteRect(getMaterialIconKey(code), 0, 0);
+            m.find(".material-icon").css({
+                backgroundImage: `url(${tilesSheetUrl})`,
+                backgroundSize: `${tileManifest.cols * iconSize}px ${tileManifest.rows * iconSize}px`,
+                backgroundPosition: `-${rect.col * iconSize}px -${rect.row * iconSize}px`,
+            });
+            m.find(".material-title").text(name);
+            materialsContainer.append(m);
+        }
+    }
+    UpdateMaterialsPanelVisibility();
+}
+
+export function UpdateSafeModeUI() {
+    const button = $("#button_safemode");
+    button
+        .toggleClass("btn-success", state.safe_mode)
+        .toggleClass("btn-danger", !state.safe_mode)
+        .attr("aria-pressed", String(state.safe_mode));
+    button
+        .find("i")
+        .toggleClass("fa-lock", state.safe_mode)
+        .toggleClass("fa-unlock", !state.safe_mode);
+    button.find("span").text(state.safe_mode ? "Safe Mode: On" : "Safe Mode: Off");
+    UpdateMaterialsPanelVisibility();
+}
+
+export function UpdateMaterialsPanelVisibility() {
+    if (!materialsContainer) {
+        return;
+    }
+    materialsContainer.find(".experimental-material").toggle(!state.safe_mode);
+    if (state.safe_mode && globals.EXPERIMENTAL_MATERIALS.has(overwrite_code)) {
+        materialsContainer
+            .find(".material-container:not(.experimental-material)")
+            .first()
+            .trigger("click");
+    }
 }
 
 let overwrite_code: string;
@@ -132,8 +181,10 @@ export function SelectAction(target: HTMLElement) {
         }
     } else if (action == "action_paste") {
         $.each(state.paste_cells, function (id, cell) {
-            cell.updateCode(cell.paste_code);
-            cell.paste_code = "";
+            if (cell.paste_code) {
+                cell.updateCode(cell.paste_code);
+                cell.paste_code = "";
+            }
         });
         state.selected_cells = state.paste_cells;
         state.paste_cells = {};
@@ -279,9 +330,7 @@ export function IconColorChange() {
 
 export function ShowLoadWarning(warning: string) {
     if ($("#map").is(":visible")) {
-        $("#load_error_message").text(
-            `${warning} The map you have open was not changed.`,
-        );
+        $("#load_error_message").text(`${warning} The map you have open was not changed.`);
         $("#load_error").show();
         return;
     }

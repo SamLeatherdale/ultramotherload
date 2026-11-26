@@ -78,9 +78,16 @@ export class Cell implements CellLike {
         }
     }
 
+    isBorder() {
+        return this.col === 0 || this.col === globals.COLS_PER_ROW - 1 || this.row === 0;
+    }
+
     isLocked() {
-        return this.code == "FD" || (state.safe_mode && (this.code == "FE" || this.is_outpost));
-        //FD is marker, never allow overwrite, FE is Invisible Barrier, allow overwrite when unlocked
+        return (
+            this.isBorder() ||
+            (state.safe_mode && (this.code == "FD" || this.code == "FE" || this.is_outpost))
+        );
+        //Outer FD perimeter (cols 0/37, row 0) is always locked; interior FD/FE/outposts unlock when Safe Mode is off
     }
 
     click() {
@@ -94,20 +101,19 @@ export class Cell implements CellLike {
             let pcell: false | Cell;
             $.each(state.selected_cells, function (id, cell) {
                 pcell = getCell(cell.row + transformRow, cell.col + transformCol, false);
-                if (!!pcell) {
+                if (pcell) {
                     pcell.paste_code = cell.code;
                     state.paste_cells[pcell.id] = pcell;
                 }
             });
         } else {
             if (globals.keys.shift && !!state.last_selected) {
-                var cellA = this;
                 var cellB = state.last_selected;
                 //cellB.select(); //Flip original first, so it matches the other tiles
-                var startRow = cellA.row < cellB.row ? cellA.row : cellB.row;
-                var startCol = cellA.col < cellB.col ? cellA.col : cellB.col;
-                var endRow = cellA.row > cellB.row ? cellA.row : cellB.row;
-                var endCol = cellA.col > cellB.col ? cellA.col : cellB.col;
+                var startRow = this.row < cellB.row ? this.row : cellB.row;
+                var startCol = this.col < cellB.col ? this.col : cellB.col;
+                var endRow = this.row > cellB.row ? this.row : cellB.row;
+                var endCol = this.col > cellB.col ? this.col : cellB.col;
                 for (var row = startRow; row <= endRow; row++) {
                     for (var col = startCol; col <= endCol; col++) {
                         state.map[row][col].select(false, true);
@@ -156,7 +162,7 @@ export class Cell implements CellLike {
         $("#info_cell_row").text(this.row);
         $("#info_cell_column").text(this.col);
         $("#info_cell_hexcode").text(this.hexcode);
-        $("#info_cell_material").text(globals.materials[this.code.toString()]);
+        $("#info_cell_material").text(globals.materials[this.code.toString()] ?? "Unknown");
         $("#info_cell_color").text(backgrounds[this.color.toString()]);
         $("#info_cell_locked").text(this.isLocked() ? "Yes" : "No");
         if (this.isLocked()) {

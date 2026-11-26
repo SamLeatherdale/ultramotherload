@@ -1,43 +1,44 @@
 {
-  "name": "ultramotherload",
-  "private": true,
-  "version": "1.0.0",
-  "description": "A fully featured map editor for Super Motherload written only in JS. Uses the FileReader API.",
-  "scripts": {
-    "build": "vp build",
-    "dev": "vp dev",
-    "start": "vp dev",
-    "test": "vp test",
-    "typecheck": "tsc --noEmit"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SamLeatherdale/ultramotherload.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/SamLeatherdale/ultramotherload/issues"
-  },
-  "homepage": "https://github.com/SamLeatherdale/ultramotherload#readme",
-  "devDependencies": {
-    "@types/bootstrap": "^4.6.6",
-    "@types/jquery": "^3.5.34",
-    "@types/jquery-mousewheel": "^3.1.12",
-    "@types/jqueryui": "^1.12.25",
-    "@types/lodash": "^4.17.27",
-    "@types/node": "26.6.7",
-    "typescript": "^7.0.2",
-    "vite-plus": "catalog:"
-  },
-  "dependencies": {
-    "bootstrap": "^4.6.2",
-    "font-awesome": "^4.7.0",
-    "jquery": "^3.8.0",
-    "jquery-mousewheel": "^3.2.2",
-    "jquery-ui": "^1.14.2",
-    "lodash": "^4.18.1",
-    "popper.js": "^1.16.1"
-  },
-  "packageManager": "pnpm@12.23.0+sha512.02da94ffaf133f46074322afe552f90d40b5f71ae259aefbccdacc5085b1d617e98d65e0131f5748b9b67445978ee5055d7d59a473f1eef0d504854fefcd5975"
+    "name": "ultramotherload",
+    "version": "1.0.0",
+    "private": true,
+    "description": "A fully featured map editor for Super Motherload written only in JS. Uses the FileReader API.",
+    "homepage": "https://github.com/SamLeatherdale/ultramotherload#readme",
+    "bugs": {
+        "url": "https://github.com/SamLeatherdale/ultramotherload/issues"
+    },
+    "license": "ISC",
+    "author": "",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SamLeatherdale/ultramotherload.git"
+    },
+    "scripts": {
+        "build": "vp build",
+        "dev": "vp dev",
+        "start": "vp dev",
+        "test": "vp test",
+        "typecheck": "tsc --noEmit",
+        "prepare": "vp config"
+    },
+    "dependencies": {
+        "bootstrap": "^4.6.2",
+        "font-awesome": "^4.7.0",
+        "jquery": "^3.8.0",
+        "jquery-mousewheel": "^3.2.2",
+        "jquery-ui": "^1.14.2",
+        "lodash": "^4.18.1",
+        "popper.js": "^1.16.1"
+    },
+    "devDependencies": {
+        "@types/bootstrap": "^4.6.6",
+        "@types/jquery": "^3.5.34",
+        "@types/jquery-mousewheel": "^3.1.12",
+        "@types/jqueryui": "^1.12.25",
+        "@types/lodash": "^4.17.27",
+        "@types/node": "26.6.7",
+        "typescript": "^7.0.2",
+        "vite-plus": "catalog:"
+    },
+    "packageManager": "pnpm@12.23.0+sha512.02da94ffaf133f46074322afe552f90d40b5f71ae259aefbccdacc5085b1d617e98d65e0131f5748b9b67445978ee5055d7d59a473f1eef0d504854fefcd5975"
 }

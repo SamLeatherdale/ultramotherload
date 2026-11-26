@@ -1,21 +1,7 @@
 //Helper functions
 import * as globals from "./globals";
 import { state } from "./globals";
-import { Cell } from "./cell";
 import { CellLike } from "./classes";
-export function getImage(code: string, hexcode: string) {
-    if (code == "FE") {
-        return "Invisible"; //FE is sky floor, and also first row of outposts (FE00, FE01, etc)
-    } else if (code == "FD") {
-        return "Marker";
-    } else if (code == "FF") {
-        return "Sky";
-    } else if (code == "01") {
-        return "Empty";
-    } else {
-        return hexcode;
-    }
-}
 
 export function getCell(row: number, col: number, getNearest: boolean) {
     if (!getNearest) {
