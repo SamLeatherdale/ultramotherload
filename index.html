@@ -5,15 +5,9 @@
     <title>Ultra Motherload - Super Motherload Map Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"
-            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"
-            integrity="sha512-57oZ/vW8ANMjR/KQ6Be9v/+/h6bq9/l3f0Oc7vn6qMqyhvPd1cvKBRWWpzu0QoneImqr2SkmO4MSqU+RpHom3Q=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
     <script src="js/index.ts" type="module"></script>
-    <link rel="stylesheet" href="scss/style.scss"/>
-    <link rel="icon" href="res/SMLME-256.jpg">
+    <link rel="stylesheet" href="css/style.css"/>
+    <link rel="icon" href="/SMLME-256.jpg">
 </head>
 <body>
 <div id="content_wrap">
@@ -46,6 +40,12 @@
 
                 <button id="save_map" class="btn btn-success">Save map</button>
                 <a id="output_map" download="map" href="">Download edited map</a>
+            </div>
+            <div id="load_error" class="alert alert-danger alert-dismissible" role="alert">
+                <span id="load_error_message"></span>
+                <button type="button" class="close" id="load_error_close" aria-label="Dismiss">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
         </div>
 

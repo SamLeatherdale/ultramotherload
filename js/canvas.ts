@@ -1,4 +1,5 @@
 //Canvas functions
+import $ from "jquery";
 import * as globals from "./globals";
 import { state } from "./globals";
 import { draw_allowed } from "./io";
@@ -86,12 +87,7 @@ export function Redraw() {
             ctx.strokeStyle = paste_color;
         }
         ctx.lineWidth = 2;
-        ctx.strokeRect(
-            outline.x + 0.5,
-            outline.y + 0.5,
-            zoom_img_size - 1,
-            zoom_img_size - 1,
-        );
+        ctx.strokeRect(outline.x + 0.5, outline.y + 0.5, zoom_img_size - 1, zoom_img_size - 1);
     });
 }
 
@@ -118,8 +114,7 @@ export function UpdateCanvasSize() {
 }
 
 export function CanvasClick(e: ClickEvent) {
-    const targetRow =
-        state.current_row + Math.floor(e.offsetY / (IMG_SIZE * zoom_level));
+    const targetRow = state.current_row + Math.floor(e.offsetY / (IMG_SIZE * zoom_level));
     const targetCol = Math.floor(e.offsetX / (IMG_SIZE * zoom_level)) + 1; //Add one to account for marker
     const target = state.map[targetRow][targetCol];
     target.click();

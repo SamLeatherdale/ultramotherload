@@ -1,3 +1,4 @@
+import $ from "jquery";
 import { Redraw } from "./canvas";
 import * as globals from "./globals";
 import { findCorners, getCell } from "./helper";
@@ -78,10 +79,7 @@ export class Cell implements CellLike {
     }
 
     isLocked() {
-        return (
-            this.code == "FD" ||
-            (state.safe_mode && (this.code == "FE" || this.is_outpost))
-        );
+        return this.code == "FD" || (state.safe_mode && (this.code == "FE" || this.is_outpost));
         //FD is marker, never allow overwrite, FE is Invisible Barrier, allow overwrite when unlocked
     }
 
@@ -95,11 +93,7 @@ export class Cell implements CellLike {
             const transformCol = this.col - corners.startCol;
             let pcell: false | Cell;
             $.each(state.selected_cells, function (id, cell) {
-                pcell = getCell(
-                    cell.row + transformRow,
-                    cell.col + transformCol,
-                    false,
-                );
+                pcell = getCell(cell.row + transformRow, cell.col + transformCol, false);
                 if (!!pcell) {
                     pcell.paste_code = cell.code;
                     state.paste_cells[pcell.id] = pcell;
@@ -135,12 +129,8 @@ export class Cell implements CellLike {
         var selection_count = Object.keys(state.selected_cells).length;
         if (selection_count > 0) {
             var corners = findCorners(state.selected_cells);
-            $("#info_selection_width").text(
-                corners.endCol - corners.startCol + 1,
-            );
-            $("#info_selection_height").text(
-                corners.endRow - corners.startRow + 1,
-            );
+            $("#info_selection_width").text(corners.endCol - corners.startCol + 1);
+            $("#info_selection_height").text(corners.endRow - corners.startRow + 1);
         }
         $("#info_selection_total").text(selection_count);
 

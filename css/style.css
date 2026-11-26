@@ -1,16 +1,11 @@
-@import "_overrides.scss";
+@import "./_overrides.css";
 
-//SCSS Variables
-$border_color: #989898;
-@mixin clearfix {
-    &:after {
-        display: table;
-        content: "";
-        clear: both;
-    }
+/* CSS Variables */
+:root {
+    --border-color: #989898;
 }
 
-//General styles
+/* General styles */
 body {
     text-align: center;
 }
@@ -33,7 +28,7 @@ body {
     cursor: pointer;
 }
 
-//Specific styles
+/* Specific styles */
 #title_row {
     text-align: center;
     padding-top: 15px;
@@ -63,12 +58,21 @@ body {
 #output_map {
     display: none;
 }
+#load_error {
+    display: none;
+    margin-top: 10px;
+    text-align: left;
+}
 #map_editcontrols {
-    @include clearfix;
+    &::after {
+        display: table;
+        content: "";
+        clear: both;
+    }
     .controls-section {
         float: left;
         padding: 0 15px;
-        border-right: 1px solid $border_color;
+        border-right: 1px solid var(--border-color);
 
         &:first-child {
             padding-left: 0;
@@ -76,7 +80,7 @@ body {
     }
     .ui-button {
         width: 120px;
-        padding: .4rem .5rem;
+        padding: 0.4rem 0.5rem;
 
         i {
             margin-right: 8px;
@@ -86,8 +90,9 @@ body {
 main {
     margin: 10px 0;
 }
-#map, #load_splash {
-    border: 1px solid $border_color;
+#map,
+#load_splash {
+    border: 1px solid var(--border-color);
 }
 #load_splash {
     text-align: center;
@@ -110,9 +115,9 @@ main {
 }
 #map {
     display: none;
-
 }
-#map_scrollcontrols, #map_infoboxes {
+#map_scrollcontrols,
+#map_infoboxes {
     display: inline-block;
     vertical-align: top;
     position: relative;
@@ -130,13 +135,12 @@ main {
 #map_scrollbar {
     height: calc(100% - 175px);
     margin: 20px 0 20px 15px;
-    //background: //Default background
 
     .ui-slider-handle {
         width: 3em;
         height: 1.6em;
         left: -1em;
-        margin-top: -.8em;
+        margin-top: -0.8em;
         text-align: center;
         line-height: 1.6em;
     }
@@ -162,22 +166,19 @@ main {
         }
     }
 }
-#cell_infobox {
-
-}
-.info-title {
+.info-title,
+.cell-info-title,
+.position-info-title {
     display: inline-block;
     font-style: italic;
 }
 .input-row {
-   margin-bottom: 4px;
+    margin-bottom: 4px;
 }
 .cell-info-title {
-    @extend .info-title;
     width: 90px;
 }
 .position-info-title {
-    @extend .info-title;
     width: 60px;
     vertical-align: bottom;
 }
@@ -195,8 +196,6 @@ main {
 #input_group_depth {
     float: left;
     width: auto;
-}
-#map_materials {
 }
 #map_materials_panel {
     display: none;
@@ -234,7 +233,7 @@ main {
     padding-top: 3px;
 }
 
-label[for='input_safemode'] {
+label[for="input_safemode"] {
     margin-right: 5px;
 }
 

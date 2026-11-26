@@ -1,8 +1,10 @@
 //UI functions
+import $ from "jquery";
 import { throttle } from "lodash";
 import { Redraw } from "./canvas";
 import * as globals from "./globals";
 import { getCell, getImage, getRandomInt } from "./helper";
+import { imageAssets } from "./images";
 import { state } from "./globals";
 
 export function CreateScrollbar() {
@@ -23,9 +25,7 @@ export function CreateScrollbar() {
     });
 }
 
-export function ScrollbarOnScroll(
-    event: JQueryMousewheel.JQueryMousewheelEventObject,
-) {
+export function ScrollbarOnScroll(event: JQueryMousewheel.JQueryMousewheelEventObject) {
     event.preventDefault();
     var SCROLL_FACTOR = 5;
     var newvalue = state.current_row - event.deltaY * SCROLL_FACTOR;
@@ -65,9 +65,7 @@ export function UpdateCurrentRow(newvalue: number, debounce?: boolean) {
     $("#input_current_row").val(state.current_row);
     $("#max_rows").text(`/ ${state.max_view_rows}`);
     const current_row_relative = globals.ROWS_ABOVE_SURFACE - state.current_row;
-    $("#input_current_depth").val(
-        Math.round(current_row_relative * globals.INGAME_DEPTH_RATIO),
-    );
+    $("#input_current_depth").val(Math.round(current_row_relative * globals.INGAME_DEPTH_RATIO));
     if (debounce) {
         throttledRedraw();
     } else {
@@ -80,7 +78,7 @@ export function CreateMaterialsPanel() {
         const m = $(".material-container:first-child").clone();
         m.attr("data-code", code);
         m.find(".material-icon").css({
-            backgroundImage: "url(res/" + getImage(code, code + "00") + ".jpg)",
+            backgroundImage: `url(${imageAssets[getImage(code, code + "00")]})`,
         });
         m.find(".material-title").text(name);
         $("#map_materials_container").append(m);
@@ -160,9 +158,7 @@ export function CheckActionState() {
     if (state.current_action == "action_copy") {
         $("#action_copy span").text("Cancel");
         $("#action_replace").addClass("ui-state-disabled");
-        $(".button-action:not(#action_replace)").removeClass(
-            "ui-state-disabled",
-        );
+        $(".button-action:not(#action_replace)").removeClass("ui-state-disabled");
     } else {
         $("#action_copy span").text("Copy");
     }
@@ -199,10 +195,7 @@ export function KeypressHandler(type: string, key: number) {
         }
     }
 
-    if (
-        (key == 33 || key == 34 || (key >= 37 && key <= 40)) &&
-        !!state.last_selected
-    ) {
+    if ((key == 33 || key == 34 || (key >= 37 && key <= 40)) && !!state.last_selected) {
         //Arrow keys
         var move_row = 0;
         var move_col = 0;
@@ -285,8 +278,21 @@ export function IconColorChange() {
 }
 
 export function ShowLoadWarning(warning: string) {
+    if ($("#map").is(":visible")) {
+        $("#load_error_message").text(
+            `${warning} The map you have open was not changed.`,
+        );
+        $("#load_error").show();
+        return;
+    }
+
     $("#load_splash_content").addClass("text-danger");
     $("#load_splash_icon").hide();
     $("#load_splash_warning").show();
     $("#load_splash_message").text(warning);
+}
+
+export function ClearLoadWarning() {
+    $("#load_error").hide();
+    $("#load_error_message").text("");
 }

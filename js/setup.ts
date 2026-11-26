@@ -1,4 +1,5 @@
 //Insertion point
+import $ from "jquery";
 import { debounce } from "lodash";
 import { UpdateCanvasSize, ZoomUpdate } from "./canvas";
 import { LoadDefaultMap, LoadFile, SaveFile } from "./io";
@@ -19,6 +20,7 @@ export function Setup() {
     UpdateCanvasSize();
 
     $("#map_file").on("change", (e) => LoadFile(e.target as HTMLInputElement));
+    $("#load_error_close").on("click", () => $("#load_error").hide());
     $("#map_zoom").on("change", ZoomUpdate);
     $(window).on("resize", debounceUpdateCanvasSize);
 

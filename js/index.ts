@@ -1,3 +1,5 @@
+import $ from "./jquery-setup";
+import "jquery-ui/dist/jquery-ui.min";
 import "popper.js/dist/popper.min";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -17,9 +19,7 @@ var ICON_COLOR_DELAY = 5000;
 function main() {
     // Check for the various File API support.
     if (!(window.File && window.FileReader)) {
-        ShowLoadWarning(
-            "This browser doesn't support the JavaScript File APIs.",
-        );
+        ShowLoadWarning("This browser doesn't support the JavaScript File APIs.");
         return;
     }
 

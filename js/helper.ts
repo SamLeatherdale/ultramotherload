@@ -19,12 +19,7 @@ export function getImage(code: string, hexcode: string) {
 
 export function getCell(row: number, col: number, getNearest: boolean) {
     if (!getNearest) {
-        if (
-            row < 0 ||
-            row >= state.total_rows ||
-            col < 1 ||
-            col > globals.VIEW_COLS_PER_ROW
-        ) {
+        if (row < 0 || row >= state.total_rows || col < 1 || col > globals.VIEW_COLS_PER_ROW) {
             return false;
         }
         return state.map[row][col];
@@ -42,16 +37,15 @@ export function getCell(row: number, col: number, getNearest: boolean) {
     return state.map[row][col];
 }
 
-export function findCorners(
-    selection: { [key: number]: CellLike } | CellLike[],
-) {
+export function findCorners(selection: { [key: number]: CellLike } | CellLike[]) {
     var r = {
         startRow: 9999,
         startCol: 9999,
         endRow: 0,
         endCol: 0,
     };
-    $.each(selection, function (id, cell) {
+    const items = Array.isArray(selection) ? selection : Object.values(selection);
+    for (const cell of items) {
         if (cell.row < r.startRow) {
             r.startRow = cell.row;
         }
@@ -65,7 +59,7 @@ export function findCorners(
         if (cell.col > r.endCol) {
             r.endCol = cell.col;
         }
-    });
+    }
     return r;
 }
 
